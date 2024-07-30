@@ -1,9 +1,9 @@
 from django.shortcuts import render
 
 from rest_framework import viewsets
-
+from djoser.views import UserViewSet
 from recipes.models import Recipe, Tag, Ingredient, Follow, User
-from recipes.serializers import TagSerializer, RecipeSerializer, IngredientSerializer, FollowSerializer
+from recipes.serializers import TagSerializer, RecipeSerializer, IngredientSerializer, FollowSerializer, CustomUserSerializer
 
 
 class CreateViewSet(viewsets.GenericViewSet,
@@ -49,3 +49,7 @@ class FollowViewSet(CreateViewSet):
         serializer.save(user=self.request.user, following=following)
 
 
+class CustomUserViewSet(UserViewSet):
+    """Класс, описывающий расширенную модель пользователя"""
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer

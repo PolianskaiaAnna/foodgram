@@ -52,10 +52,11 @@ class Follow(models.Model):
 class Recipe(models.Model):
     """Модель рецепта"""
     ingredients = models.ManyToManyField(
-        Ingredient, verbose_name='Рецепт',
+        Ingredient, through='IngredientRecipe',
+        verbose_name='Рецепт',
         related_name='recipes',)
     tags = models.ManyToManyField(
-        Tag, verbose_name='Рецепт',
+        Tag, through='TagRecipe', verbose_name='Рецепт',
         related_name='recipes',)
     # Может нужно будет поменять тип поля, для кодировки base64
     image = models.TextField(verbose_name='Изображение')
@@ -69,6 +70,7 @@ class Recipe(models.Model):
         User,
         on_delete=models.SET_NULL,
         related_name='recipes',
+        verbose_name='Пользователь'
     )
 
     class Meta:
@@ -78,4 +80,67 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+    
 
+class TagRecipe(models.Model):
+    """Модель связи между рецептом и тэгом"""
+    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
+    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f'{self.recipe} {self.tag}' 
+    
+
+class IngredientRecipe(models.Model):
+    """Модель связи между рецептом и тэгом"""
+    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL)
+    amount_ingredient = models.PositiveIntegerField()
+
+
+    def __str__(self):
+        return f'{self.recipe} {self.ingredient}' 
+
+
+class Favorite(models.Model):
+    """Модель для добавления рецептов в избранное"""
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='favorites',
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        'Recipe', on_delete=models.CASCADE,
+        related_name='favorited_by',
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        unique_together = ('user', 'recipe')
+        verbose_name = 'Избранное'
+        verbose_name_plural = 'Избранное'
+
+    def __str__(self):
+        return self.user.username  # Подумать как исправить
+    
+
+class ShoppingList(models.Model):
+    """Модель для добавление рецептов в список покупок"""
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE,
+        related_name='shopping_lists',
+        verbose_name='Пользователь'
+    )
+    recipe = models.ForeignKey(
+        'Recipe', on_delete=models.CASCADE,
+        related_name='in_shopping_list',
+        verbose_name='Рецепт'
+    )
+
+    class Meta:
+        unique_together = ('user', 'recipe')
+        verbose_name = 'Список покупок'
+        verbose_name_plural = 'Список покупок'
+
+    def __str__(self):
+        return f'{self.user.username} - {self.recipe.name}'

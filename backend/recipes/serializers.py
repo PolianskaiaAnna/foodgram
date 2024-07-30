@@ -3,6 +3,7 @@ import datetime as dt
 
 from django.core.files.base import ContentFile
 from rest_framework import serializers
+from djoser.serializers import UserSerializer
 
 from recipes.models import Ingredient, Tag, Recipe, Follow, User
 
@@ -19,12 +20,36 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
+class CustomUserSerializer(UserSerializer):
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password', 'avatar')
+
+    def create(self, validated_data):
+        """
+        Функция создает нового пользователя или
+        получает уже зарегистрированного из базы
+        """
+        email = validated_data['email']
+        password = validated_data['password']
+        user, created = User.objects.get_or_create(
+            password=password, defaults={'email': email}
+        )
+        self.send_activation_email(user)
+
+        return user
+
+
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор для тегов."""
 
     class Meta:
         model = Tag
         fields = ('name', 'slug')
+
+    # def create()
+
+    # def update()
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -33,6 +58,11 @@ class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
         fields = ('name', 'measurement_unit')
+
+    # def create()
+
+    # def update()
+
 
         
 class RecipeSerializer(serializers.ModelSerializer):
