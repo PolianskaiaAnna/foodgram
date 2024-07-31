@@ -56,7 +56,7 @@ class Recipe(models.Model):
         verbose_name='Рецепт',
         related_name='recipes',)
     tags = models.ManyToManyField(
-        Tag, through='TagRecipe', verbose_name='Рецепт',
+        Tag, verbose_name='Рецепт',
         related_name='recipes',)
     # Может нужно будет поменять тип поля, для кодировки base64
     image = models.TextField(verbose_name='Изображение')
@@ -82,13 +82,13 @@ class Recipe(models.Model):
         return self.name
     
 
-class TagRecipe(models.Model):
-    """Модель связи между рецептом и тэгом"""
-    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
-    tag = models.ForeignKey(Tag, on_delete=models.SET_NULL)
+# class TagRecipe(models.Model):
+#     """Модель связи между рецептом и тэгом"""
+#     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
+#     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL)
 
-    def __str__(self):
-        return f'{self.recipe} {self.tag}' 
+#     def __str__(self):
+#         return f'{self.recipe} {self.tag}' 
     
 
 class IngredientRecipe(models.Model):

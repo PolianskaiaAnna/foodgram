@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 from djoser.serializers import UserSerializer
 
-from recipes.models import Ingredient, Tag, Recipe, Follow, User
+from recipes.models import Ingredient, Tag, Recipe, Follow, User, Favorite, ShoppingList
 
 
 class Base64ImageField(serializers.ImageField):
@@ -63,10 +63,30 @@ class IngredientSerializer(serializers.ModelSerializer):
 
     # def update()
 
-
         
-class RecipeSerializer(serializers.ModelSerializer):
-    """Сериализатор для рецептов"""
+# class RecipeSerializer(serializers.ModelSerializer):
+#     """Сериализатор для рецептов"""
+#     is_favorited = serializers.SerializerMethodField()
+#     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+#     class Meta:
+#         model = Recipe
+#         exclude = ('id',)
+
+class RecipeReadSerializer(serializers.ModelSerializer):
+    """Сериализатор для чтения рецептов"""
+    class Meta:
+        model = Recipe
+        exclude = ('id',)
+
+    def to_representation(self, instance):
+        return RecipeReadSerializer(instance).data
+
+
+class RecipeCreateSerizalizer(serializers.ModelSerializer):
+    """Сериализатор для создания рецептов"""
+    is_favorited = serializers.SerializerMethodField()
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = Recipe
@@ -75,13 +95,15 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(serializers.ModelSerializer):
     """Класс, описывающий сериализатор для модели Follow"""
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault()
-    )
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field='username'
-    )
+    # user = serializers.SlugRelatedField(
+    #     read_only=True, slug_field='username',
+    #     default=serializers.CurrentUserDefault()
+    # )
+    # following = serializers.SlugRelatedField(
+    #     queryset=User.objects.all(), slug_field='username'
+    # )
+
+    is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = Follow
@@ -100,3 +122,18 @@ class FollowSerializer(serializers.ModelSerializer):
                 "Вы уже подписаны на этого пользователя."
             )
         return data
+    
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    """Сериализатор для избранного"""
+   
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+class ShoppingListSerializer(serializers.ModelSerializer):
+    """Сериализатор для списка покупок"""
+   
+    class Meta:
+        model = ShoppingList
+        fields = ('user', 'recipe')
