@@ -2,8 +2,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 
 from recipes.validators import validation_cooking_time
-
-User = get_user_model
+from users.models import User
 
 
 class Ingredient(models.Model):
@@ -24,6 +23,7 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
+    """Модель тега"""
     name = models.CharField(verbose_name='Название')
     slug = models.SlugField()
 
@@ -34,30 +34,20 @@ class Tag(models.Model):
         
     def __str__(self):
         return self.name
-    
-
-class Follow(models.Model):    
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        verbose_name='Пользователь',
-        related_name='follows'
-    )
-    following = models.ForeignKey(
-        User, on_delete=models.CASCADE,
-        verbose_name='Подписки',
-        related_name='followers'
-    )
-
+ 
 
 class Recipe(models.Model):
     """Модель рецепта"""
     ingredients = models.ManyToManyField(
         Ingredient, through='IngredientRecipe',
-        verbose_name='Рецепт',
-        related_name='recipes',)
+        verbose_name='Ингредиент',
+        related_name='recipes'
+    )
     tags = models.ManyToManyField(
-        Tag, verbose_name='Рецепт',
-        related_name='recipes',)
+        Tag, verbose_name='Тег',
+        through='TagRecipe',
+        related_name='recipes',
+    )
     # Может нужно будет поменять тип поля, для кодировки base64
     image = models.TextField(verbose_name='Изображение')
     name = models.CharField(max_length=256, verbose_name='Название')
@@ -66,12 +56,12 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=(validation_cooking_time,)
     )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.SET_NULL,
-        related_name='recipes',
-        verbose_name='Пользователь'
-    )
+    # author = models.ForeignKey(
+    #     User,
+    #     on_delete=models.SET_NULL,
+    #     related_name='recipes',
+    #     verbose_name='Пользователь'
+    # )
 
     class Meta:
         verbose_name = 'Рецепт'
@@ -82,21 +72,20 @@ class Recipe(models.Model):
         return self.name
     
 
-# class TagRecipe(models.Model):
-#     """Модель связи между рецептом и тэгом"""
-#     recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
-#     tag = models.ForeignKey(Tag, on_delete=models.SET_NULL)
+class TagRecipe(models.Model):
+    """Модель связи между рецептом и тэгом"""
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
-#     def __str__(self):
-#         return f'{self.recipe} {self.tag}' 
+    def __str__(self):
+        return f'{self.recipe} {self.tag}' 
     
 
 class IngredientRecipe(models.Model):
     """Модель связи между рецептом и тэгом"""
-    recipe = models.ForeignKey(Recipe, on_delete=models.SET_NULL)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.SET_NULL)
-    amount_ingredient = models.PositiveIntegerField()
-
+    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    amount = models.PositiveIntegerField()
 
     def __str__(self):
         return f'{self.recipe} {self.ingredient}' 
@@ -121,7 +110,7 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
 
     def __str__(self):
-        return self.user.username  # Подумать как исправить
+        return {self.user.username} - {self.recipe.name}
     
 
 class ShoppingList(models.Model):
@@ -143,4 +132,4 @@ class ShoppingList(models.Model):
         verbose_name_plural = 'Список покупок'
 
     def __str__(self):
-        return f'{self.user.username} - {self.recipe.name}'
+        return f'{self.user.username} {self.recipe.name}'
