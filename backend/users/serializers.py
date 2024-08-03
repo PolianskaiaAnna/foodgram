@@ -1,7 +1,7 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from users.models import User, Follow
-from recipes.permissions import IsOwnerOrReadOnly, IsAuthorOrAdmin
+# from recipes.permissions import IsAuthorOrAdmin
 from recipes.serializers import RecipeReadSerializer
 
 

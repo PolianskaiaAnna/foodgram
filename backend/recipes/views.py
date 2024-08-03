@@ -2,13 +2,13 @@ from django.shortcuts import render, get_object_or_404
 
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from djoser.views import UserViewSet
-from recipes.models import Recipe, Tag, Ingredient, Follow, Favorite, ShoppingList
-from users.models import User
-from recipes.permissions import IsOwnerOrReadOnly, IsAuthorOrAdmin
+# from users.views import UserViewSet
+from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList
+# from users.models import User, Follow
+from recipes.permissions import IsAuthorOrAdmin
 from recipes.serializers import (
-    TagSerializer, RecipeSerializer, 
-    IngredientSerializer, FollowSerializer,
+    TagSerializer, 
+    IngredientSerializer,
     ShoppingListSerializer,
     FavoriteSerializer, RecipeReadSerializer,
     RecipeCreateSerizalizer
@@ -16,11 +16,10 @@ from recipes.serializers import (
 
 
 
-
 class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
     queryset = Recipe.objects.all()
-    serializer_class = RecipeSerializer
+    serializer_class = RecipeReadSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdmin]
 
     # def get_queryset(self):

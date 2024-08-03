@@ -5,8 +5,8 @@ from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
-from recipes.permissions import IsOwnerOrReadOnly, IsAuthorOrAdmin
-from users.serializers import AvatarSerializer, ChangePasswordSerializer, FollowSerializer
+from recipes.permissions import IsAuthorOrAdmin
+from users.serializers import AvatarSerializer, ChangePasswordSerializer, FollowSerializer, UserSerializer
 from users.models import User, Follow
 from recipes.models import Recipe
 
@@ -62,18 +62,22 @@ class FollowViewSet(CreateViewSet):
         serializer.save(user=self.request.user, following=following)
 
 
-class SubscriptionViewSet(viewsets.ViewSet):
-    """Возвращает список пользователей из подписок"""
-    permission_classes = [IsAuthenticated]
+# class SubscriptionViewSet(viewsets.ViewSet):
+#     """Возвращает список пользователей из подписок"""
+#     permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        queryset = Recipe.objects.annotate(count_recipe=Avg('reviews__score'))
-        return queryset
+#     # def get_queryset(self):
+#     #     queryset = Recipe.objects.annotate(count_recipe=Avg('recipes__score'))
+#     #     return queryset
 
-    def list(self, request):
-        user = request.user
-        follows = Follow.objects.filter(user=user)
-        serializer = FollowSerializer(follows, many=True)
-        return Response(serializer.data)
+#     def list(self, request):
+#         user = request.user
+#         follows = Follow.objects.filter(user=user)
+#         serializer = FollowSerializer(follows, many=True)
+#         return Response(serializer.data)
     
    
+class UserViewSet(viewsets.ViewSet):
+    queryset = User.objects.all()
+    serializer = UserSerializer
+

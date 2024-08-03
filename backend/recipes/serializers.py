@@ -5,11 +5,11 @@ from django.core.files.base import ContentFile
 from rest_framework import serializers
 
 from recipes.models import (
-    Ingredient, Tag, Recipe, Follow,
+    Ingredient, Tag, Recipe,
     Favorite, ShoppingList, TagRecipe,
     IngredientRecipe
 )
-from users.models import User
+from users.models import User, Follow
 
 
 class Base64ImageField(serializers.ImageField):
@@ -65,6 +65,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 class RecipeCreateSerizalizer(serializers.ModelSerializer):
     """Сериализатор для создания рецептов"""
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     # tags = serializers.SlugRelatedField(
     #     slug_field='slug', many=True,
@@ -129,29 +130,29 @@ class ShoppingListSerializer(serializers.ModelSerializer):
 
 #     class Meta:
 #         model = Recipe
-#         fields = ('id', 'name', 'test', 'cooking_time', 'ingredients', 'tags', 'image')
+# #         fields = ('id', 'name', 'test', 'cooking_time', 'ingredients', 'tags', 'image')
 
-    def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredients', [])
-        tags_data = validated_data.pop('tags', [])
+#     def create(self, validated_data):
+#         ingredients_data = validated_data.pop('ingredients', [])
+#         tags_data = validated_data.pop('tags', [])
         
-        recipe = Recipe.objects.create(**validated_data)
+#         recipe = Recipe.objects.create(**validated_data)
         
-        existing_tags = Tag.objects.filter(id__in=tags_data)
-        recipe.tags.add(*existing_tags)
+#         existing_tags = Tag.objects.filter(id__in=tags_data)
+#         recipe.tags.add(*existing_tags)
         
-        for ingredient_data in ingredients_data:
-            ingredient, _ = Ingredient.objects.get_or_create(
-                name=ingredient_data['name'],
-                measurement_unit=ingredient_data['measurement_unit']
-            )
-            IngredientRecipe.objects.create(
-                recipe=recipe,
-                ingredient=ingredient,
-                amount_ingredient=ingredient_data.get('amount_ingredient', 1)
-            )
+#         for ingredient_data in ingredients_data:
+#             ingredient, _ = Ingredient.objects.get_or_create(
+#                 name=ingredient_data['name'],
+#                 measurement_unit=ingredient_data['measurement_unit']
+#             )
+#             IngredientRecipe.objects.create(
+#                 recipe=recipe,
+#                 ingredient=ingredient,
+#                 amount_ingredient=ingredient_data.get('amount_ingredient', 1)
+#             )
 
-        return recipe
+#         return recipe
 
 #     def update(self, instance, validated_data):
 #         ingredients_data = validated_data.pop('ingredients', [])

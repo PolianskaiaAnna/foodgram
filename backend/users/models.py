@@ -38,6 +38,7 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
     
+    
 class Follow(models.Model):
     """Модель подписки пользователей друг на друга"""
     user = models.ForeignKey(

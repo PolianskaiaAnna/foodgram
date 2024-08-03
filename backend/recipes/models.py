@@ -8,10 +8,12 @@ from users.models import User
 class Ingredient(models.Model):
     """Модель ингредиентов"""
     # Должен быть поиск по частичному вхождению
-    name = models.CharField(verbose_name='Название', unique=True)
+    name = models.CharField(
+        max_length=200,
+        verbose_name='Название', unique=True)
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        unique=True)
+        unique=True, max_length=100)
     
     class Meta:
         verbose_name = 'Ингредиент'
@@ -24,7 +26,7 @@ class Ingredient(models.Model):
 
 class Tag(models.Model):
     """Модель тега"""
-    name = models.CharField(verbose_name='Название')
+    name = models.CharField(verbose_name='Название', max_length=100)
     slug = models.SlugField()
 
     class Meta:
@@ -58,9 +60,8 @@ class Recipe(models.Model):
     )
     # author = models.ForeignKey(
     #     User,
-    #     on_delete=models.SET_NULL,
+    #     on_delete=models.CASCADE,
     #     related_name='recipes',
-    #     verbose_name='Пользователь'
     # )
 
     class Meta:
