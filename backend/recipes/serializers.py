@@ -39,15 +39,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         model = Ingredient
         fields = ('name', 'measurement_unit', 'recipes')
 
-        
-# class RecipeSerializer(serializers.ModelSerializer):
-#     """Сериализатор для рецептов"""
-#     is_favorited = serializers.SerializerMethodField()
-#     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-#     class Meta:
-#         model = Recipe
-#         exclude = ('id',)
 
 class RecipeReadSerializer(serializers.ModelSerializer):
     """Сериализатор для чтения рецептов"""
@@ -88,8 +80,8 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
         recipe = Recipe.objects.create(**validated_data)
         
         # Проверить добавление тегов!
-        # existing_tags = Tag.objects.filter(id__in=tags_data)
-        # recipe.tags.add(*existing_tags)
+        existing_tags = Tag.objects.filter(id__in=tags_data)
+        recipe.tags.add(*existing_tags)
         
         for ingredient_data in ingredients_data:
             ingredient, status = Ingredient.objects.get_or_create(

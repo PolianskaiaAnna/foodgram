@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 from recipes.permissions import IsAuthorOrAdmin
-from users.serializers import AvatarSerializer, ChangePasswordSerializer, FollowSerializer, UserSerializer
+from users.serializers import AvatarSerializer, ChangePasswordSerializer, FollowSerializer, UserSerializer, UserCreateSerializer
 from users.models import User, Follow
 from recipes.models import Recipe
 
@@ -77,7 +77,12 @@ class FollowViewSet(CreateViewSet):
 #         return Response(serializer.data)
     
    
-class UserViewSet(viewsets.ViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer = UserSerializer
+    serializer_class = UserSerializer
+
+    def get_serializer_class(self):
+        if self.action in ('list', 'retrieve'):
+            return UserSerializer
+        return UserCreateSerializer
 

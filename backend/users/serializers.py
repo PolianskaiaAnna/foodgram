@@ -1,41 +1,45 @@
-from djoser.serializers import UserCreateSerializer, UserSerializer
+# from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 from users.models import User, Follow
 # from recipes.permissions import IsAuthorOrAdmin
 from recipes.serializers import RecipeReadSerializer
 
 
-class UserSerializer(UserSerializer):
+class UserSerializer(serializers.ModelSerializer):
     recipes = RecipeReadSerializer(many=True, read_only=True)
     recipes_count = serializers.SerializerMethodField()
     
     is_subscribed = serializers.SerializerMethodField()
 
-    class Meta(UserSerializer.Meta):
+    class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'password')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'recipes', 'recipes_count', 'is_subscribed')
 
     def get_recipes_count(self, obj):
         """Получение общего количества рецептов пользователя"""
         return obj.recipes.count()
     
-    def get_is_subscribe(self, obj):
-        user = self.context['request'].user
-        return Follow.objects.filter(user=user, following=obj).exists()
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Follow.objects.filter(user=request.user, following=obj).exists()
+        return False
 
 
-class UserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
+class UserCreateSerializer(serializers.ModelSerializer):
+    class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'password')
 
+
     def create(self, validated_data):
+        password = validated_data.pop('password')
         user = User.objects.create_user(
             email=validated_data['email'],
             username=validated_data['username'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            password=validated_data['password']
+            password=password
         )
         return user
 

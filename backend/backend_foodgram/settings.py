@@ -114,17 +114,19 @@ REST_FRAMEWORK = {
 # } 
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
-EMAIL_ADMIN = 'admin@foodgram.foodgram'
-
 DJOSER = {
     'USER_ID_FIELD': 'id',
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
+        'activation': 'djoser.serializers.ActivationSerializer',
         'user_create': 'users.serializers.UserCreateSerializer',
         'user': 'users.serializers.UserSerializer',
-        'current_user': 'users.serializers.UserSerializer',
+        'current_user': 'djoser.serializers.UserSerializer',
         'user-delete': 'djoser.serializers.UserDeleteSerializer',
+        'token': 'djoser.serializers.TokenSerializer',
+        'token_create': 'djoser.serializers.TokenCreateSerializer',
+        'set_password': 'djoser.serializers.SetPasswordSerializer',
+        'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+        
     },
 }

@@ -1,0 +1,11 @@
+POST http://127.0.0.1:8000/api/users/
+Content-Type: application/json
+
+{
+    "email": "123456@12321.ru",
+    "username": "ghbvth",
+    "first_name": "angfg",
+    "last_name": "asdsdfsd",
+    "avatar": null,
+    "password": "foodgram123"
+}

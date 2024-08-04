@@ -58,11 +58,11 @@ class Recipe(models.Model):
         verbose_name='Время приготовления',
         validators=(validation_cooking_time,)
     )
-    # author = models.ForeignKey(
-    #     User,
-    #     on_delete=models.CASCADE,
-    #     related_name='recipes',
-    # )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='recipes',
+    )
 
     class Meta:
         verbose_name = 'Рецепт'
