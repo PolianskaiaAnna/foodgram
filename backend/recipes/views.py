@@ -15,7 +15,6 @@ from recipes.serializers import (
 )
 
 
-
 class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
     queryset = Recipe.objects.all()

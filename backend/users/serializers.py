@@ -29,8 +29,7 @@ class UserSerializer(serializers.ModelSerializer):
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'password')
-
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -42,6 +41,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
             password=password
         )
         return user
+    
+    def to_representation(self, instance):
+        """Функция убирает поле пароля из ответа"""
+        representation = super().to_representation(instance)
+        representation.pop('password', None)
+        return representation
 
 
 class AvatarSerializer(serializers.ModelSerializer):

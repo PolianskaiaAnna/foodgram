@@ -13,7 +13,7 @@ class Ingredient(models.Model):
         verbose_name='Название', unique=True)
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        unique=True, max_length=100)
+        max_length=100)
     
     class Meta:
         verbose_name = 'Ингредиент'
@@ -53,7 +53,7 @@ class Recipe(models.Model):
     # Может нужно будет поменять тип поля, для кодировки base64
     image = models.TextField(verbose_name='Изображение')
     name = models.CharField(max_length=256, verbose_name='Название')
-    test = models.TextField(verbose_name='Описание')
+    text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления',
         validators=(validation_cooking_time,)

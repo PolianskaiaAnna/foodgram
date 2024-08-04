@@ -63,25 +63,25 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
     #     slug_field='slug', many=True,
     #     queryset=Tag.objects.all()
     # )
-    # ingredients = serializers.StringRelatedField(many=True)
-    ingredients = serializers.ListSerializer(child=serializers.DictField(), write_only=True)
-    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, write_only=True)
-    image = Base64ImageField()
+    # ingredients = serializers.StringRelatedField(many=True )
+    ingredients = serializers.ListSerializer(child=serializers.DictField(), write_only=True, label='Ингредиенты')
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(), many=True, write_only=True, label='Теги')
+    image = Base64ImageField(label='Изображение')
 
 
     class Meta:
         model = Recipe
-        exclude = ('id',)
+        fields = ('name', 'ingredients', 'tags', 'image', 'text', 'cooking_time', 'is_favorited', 'is_in_shopping_cart', 'author')
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
         
         recipe = Recipe.objects.create(**validated_data)
-        
-        # Проверить добавление тегов!
-        existing_tags = Tag.objects.filter(id__in=tags_data)
-        recipe.tags.add(*existing_tags)
+
+        for tag in tags_data:
+            TagRecipe.objects.create(recipe=recipe, tag=tag)      
+    
         
         for ingredient_data in ingredients_data:
             ingredient, status = Ingredient.objects.get_or_create(
@@ -96,7 +96,9 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
 
         return recipe
 
-
+    # # Проверить добавление тегов!
+        # existing_tags = Tag.objects.filter(id__in=tags_data)
+        # recipe.tags.add(*existing_tags)
 
 class FavoriteSerializer(serializers.ModelSerializer):
     """Сериализатор для избранного"""
