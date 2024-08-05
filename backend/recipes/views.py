@@ -1,6 +1,8 @@
 from django.shortcuts import render, get_object_or_404
 
 from rest_framework import viewsets
+from rest_framework import filters
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
 # from users.views import UserViewSet
 from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList
@@ -39,6 +41,10 @@ class IngredientViewSet(viewsets.ModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [IsAdminUser]
+    filter_backends = (filters.SearchFilter,)
+    # Определим, что значение параметра search должно быть началом искомой строки
+    search_fields = ('^name',)
+    pagination_class = None 
     
 
 

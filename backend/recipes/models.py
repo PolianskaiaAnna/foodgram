@@ -10,10 +10,12 @@ class Ingredient(models.Model):
     # Должен быть поиск по частичному вхождению
     name = models.CharField(
         max_length=200,
-        verbose_name='Название', unique=True)
+        verbose_name='Название', unique=True
+    )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=100)
+        max_length=100
+    )
     
     class Meta:
         verbose_name = 'Ингредиент'
@@ -50,8 +52,13 @@ class Recipe(models.Model):
         through='TagRecipe',
         related_name='recipes',
     )
-    # Может нужно будет поменять тип поля, для кодировки base64
-    image = models.TextField(verbose_name='Изображение')
+    
+    image = models.ImageField(
+        upload_to='cats/images/',
+        null=True,
+        default=None,
+        verbose_name='Изображение'
+    )
     name = models.CharField(max_length=256, verbose_name='Название')
     text = models.TextField(verbose_name='Описание')
     cooking_time = models.PositiveIntegerField(

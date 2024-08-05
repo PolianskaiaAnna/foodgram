@@ -87,6 +87,6 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserCreateSerializer
     
     def get_queryset(self):
-        queryset = User.objects.annotate(Count('recipe'))
+        queryset = User.objects.annotate(Count('recipes'))
         return queryset
 
