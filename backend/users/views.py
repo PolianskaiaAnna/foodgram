@@ -1,6 +1,6 @@
 from rest_framework import generics, permissions, status
 from django.shortcuts import render, get_object_or_404
-from django.db.models import Avg
+from django.db.models import Count
 from rest_framework import viewsets, mixins
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -85,4 +85,8 @@ class UserViewSet(viewsets.ModelViewSet):
         if self.action in ('list', 'retrieve'):
             return UserSerializer
         return UserCreateSerializer
+    
+    def get_queryset(self):
+        queryset = User.objects.annotate(Count('recipe'))
+        return queryset
 

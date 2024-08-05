@@ -7,8 +7,7 @@ from recipes.serializers import RecipeReadSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     recipes = RecipeReadSerializer(many=True, read_only=True)
-    recipes_count = serializers.SerializerMethodField()
-    
+    recipes_count = serializers.SerializerMethodField()    
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:

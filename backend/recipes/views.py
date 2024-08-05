@@ -20,11 +20,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdmin]
-
-    # def get_queryset(self):
-    #     queryset = Recipe.objects.annotate(rating=Avg('reviews__score'))
-    #     return queryset
-
+   
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
             return RecipeReadSerializer
