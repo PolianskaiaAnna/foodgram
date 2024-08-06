@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from django.db import models
 
 from recipes.validators import validation_cooking_time
@@ -7,7 +6,6 @@ from users.models import User
 
 class Ingredient(models.Model):
     """Модель ингредиентов"""
-    # Должен быть поиск по частичному вхождению
     name = models.CharField(
         max_length=200,
         verbose_name='Название', unique=True
@@ -16,7 +14,7 @@ class Ingredient(models.Model):
         verbose_name='Единица измерения',
         max_length=100
     )
-    
+
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
@@ -35,10 +33,10 @@ class Tag(models.Model):
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
         ordering = ('name',)
-        
+
     def __str__(self):
         return self.name
- 
+
 
 class Recipe(models.Model):
     """Модель рецепта"""
@@ -52,9 +50,8 @@ class Recipe(models.Model):
         through='TagRecipe',
         related_name='recipes',
     )
-    
     image = models.ImageField(
-        upload_to='cats/images/',
+        upload_to='recipe/images/',
         null=True,
         default=None,
         verbose_name='Изображение'
@@ -78,7 +75,7 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class TagRecipe(models.Model):
     """Модель связи между рецептом и тэгом"""
@@ -86,8 +83,8 @@ class TagRecipe(models.Model):
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.recipe} {self.tag}' 
-    
+        return f'{self.recipe} {self.tag}'
+
 
 class IngredientRecipe(models.Model):
     """Модель связи между рецептом и тэгом"""
@@ -96,7 +93,7 @@ class IngredientRecipe(models.Model):
     amount = models.PositiveIntegerField()
 
     def __str__(self):
-        return f'{self.recipe} {self.ingredient}' 
+        return f'{self.recipe} {self.ingredient}'
 
 
 class Favorite(models.Model):
@@ -119,7 +116,7 @@ class Favorite(models.Model):
 
     def __str__(self):
         return {self.user.username} - {self.recipe.name}
-    
+
 
 class ShoppingList(models.Model):
     """Модель для добавление рецептов в список покупок"""

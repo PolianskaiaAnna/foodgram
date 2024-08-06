@@ -32,8 +32,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid()
         self.perform_create(serializer)        
-        read_serializer = RecipeReadSerializer(instance=serializer.instance, context={'request': request})
+        read_serializer = RecipeReadSerializer(instance=serializer.instance, context={'request': request})        
         return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid()
+        self.perform_update(serializer)        
+        read_serializer = RecipeReadSerializer(instance=serializer.instance, context={'request': request})        
+        return Response(read_serializer.data, status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ModelViewSet):
