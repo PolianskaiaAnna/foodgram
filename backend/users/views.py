@@ -2,11 +2,13 @@ from rest_framework import generics, permissions, status
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Count
 from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthenticatedOrReadOnly, AllowAny
+from djoser.serializers import SetPasswordSerializer
 from recipes.permissions import IsAuthorOrAdmin
-from users.serializers import AvatarSerializer, ChangePasswordSerializer, FollowSerializer, UserSerializer, UserCreateSerializer
+from users.serializers import AvatarSerializer, FollowSerializer, UserSerializer, UserCreateSerializer
 from users.models import User, Follow
 from recipes.models import Recipe
 
@@ -34,13 +36,14 @@ class AvatarView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ChangePasswordView(generics.UpdateAPIView):
-    queryset = User.objects.all()
-    permission_classes = [IsAuthenticated]
-    serializer_class = ChangePasswordSerializer
+# class ChangePasswordView(generics.UpdateAPIView):
+#     queryset = User.objects.all()
+#     permission_classes = [IsAuthenticated]
+#     http_method_names = ["post"]
+#     serializer_class = ChangePasswordSerializer
 
-    def get_object(self):
-        return self.request.user
+#     def get_object(self):
+#         return self.request.user
     
 
 class FollowViewSet(CreateViewSet):
@@ -89,4 +92,15 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = User.objects.annotate(Count('recipes'))
         return queryset
+    
+    
+    @action(detail=False, methods=['post'], url_path='set_password', url_name='set_password')
+    def set_password(self, request):
+        user = request.user
+        serializer = SetPasswordSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

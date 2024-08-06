@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, IsAuthentic
 # from users.views import UserViewSet
 from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList
 # from users.models import User, Follow
-from recipes.permissions import IsAuthorOrAdmin
+from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
 from recipes.serializers import (
     TagSerializer, 
     IngredientSerializer,
@@ -40,14 +40,15 @@ class TagViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Tag """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrReadOnly]
+    pagination_class = None 
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Ingredient """
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsAdminOrReadOnly]
     filter_backends = (filters.SearchFilter,)
     # Определим, что значение параметра search должно быть началом искомой строки
     search_fields = ('^name',)

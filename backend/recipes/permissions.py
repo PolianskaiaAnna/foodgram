@@ -37,3 +37,21 @@ class IsAuthorOrAdmin(permissions.BasePermission):
             obj.author == request.user            
             or request.user.is_staff
         )
+    
+
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """
+    Разрешение, дающее доступ к редактированию только
+    админу
+    """
+    def has_permission(self, request, view):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_staff
+        )
+
+    def has_object_permission(self, request, view, obj):
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_staff
+        )

@@ -127,8 +127,7 @@ DJOSER = {
         'user-delete': 'djoser.serializers.UserDeleteSerializer',
         'token': 'djoser.serializers.TokenSerializer',
         'token_create': 'djoser.serializers.TokenCreateSerializer',
-        'set_password': 'djoser.serializers.SetPasswordSerializer',
-        'set_password_retype': 'djoser.serializers.SetPasswordRetypeSerializer',
+        'set_password': 'djoser.serializers.ChangePasswordSerializer',        
         
     },
 }
