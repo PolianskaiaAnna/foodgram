@@ -21,7 +21,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
-    'pages.apps.PagesConfig',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
 ]
@@ -120,7 +119,7 @@ DJOSER = {
         'user-delete': 'djoser.serializers.UserDeleteSerializer',
         'token': 'djoser.serializers.TokenSerializer',
         'token_create': 'djoser.serializers.TokenCreateSerializer',
-        'set_password': 'djoser.serializers.ChangePasswordSerializer',        
-        
+        'set_password': 'djoser.serializers.ChangePasswordSerializer',
+
     },
 }

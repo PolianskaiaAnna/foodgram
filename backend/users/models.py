@@ -1,7 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import BaseUserManager
-
 
 LENG_EMAIL = 254
 LENG_USER = 150
@@ -9,13 +7,12 @@ LENG_USER = 150
 
 class User(AbstractUser):
     """Класс, описывающий кастомную модель пользователя"""
-   
+
     username = models.CharField(
         'Имя пользователя',
         max_length=LENG_USER,
         unique=True
     )
-   
     email = models.EmailField(
         'Email', max_length=LENG_EMAIL, unique=True
     )
@@ -30,7 +27,6 @@ class User(AbstractUser):
         null=True, blank=True
     )
 
-   
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -38,8 +34,8 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
-    
-    
+
+
 class Follow(models.Model):
     """Модель подписки пользователей друг на друга"""
     user = models.ForeignKey(

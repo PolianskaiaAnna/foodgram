@@ -1,30 +1,35 @@
-# from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
+
 from users.models import User, Follow
-# from recipes.permissions import IsAuthorOrAdmin
-from recipes.serializers import RecipeReadSerializer
+# from recipes.serializers import RecipeReadSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
-
     is_subscribed = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'avatar', 'is_subscribed')
+        fields = (
+            'id', 'email', 'username',
+            'first_name', 'last_name', 'avatar', 'is_subscribed'
+        )
 
-    
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(user=request.user, following=obj).exists()
+            return Follow.objects.filter(
+                user=request.user, following=obj
+            ).exists()
         return False
-    
+
 
 class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'password')
+        fields = (
+            'id', 'email', 'username', 'first_name',
+            'last_name', 'password'
+        )
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -36,7 +41,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             password=password
         )
         return user
-    
+
     def to_representation(self, instance):
         """Функция убирает поле пароля из ответа"""
         representation = super().to_representation(instance)
@@ -50,27 +55,6 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ['avatar']
 
 
-# class ChangePasswordSerializer(serializers.Serializer):
-#     current_password = serializers.CharField(required=True)
-#     new_password = serializers.CharField(required=True)
-
-#     # def validate_new_password(self, value):
-#     #     validate_password(value)
-#     #     return value
-
-#     def validate(self, data):
-#         user = self.context['request'].user
-#         if not user.check_password(data['current_password']):
-#             raise serializers.ValidationError('Введен неверный пароль')
-#         return data
-
-#     def save(self, **kwargs):
-#         user = self.context['request'].user
-#         user.set_password(self.validated_data['new_password'])
-#         user.save()
-#         return user
-    
-
 class FollowSerializer(serializers.ModelSerializer):
     """Класс, описывающий сериализатор для модели Follow"""
     user = serializers.SlugRelatedField(
@@ -80,9 +64,10 @@ class FollowSerializer(serializers.ModelSerializer):
     following = serializers.SlugRelatedField(
         queryset=User.objects.all(), slug_field='username'
     )
-
-    recipe = serializers.ListSerializer(child=serializers.DictField(), write_only=True)
-   
+    recipe = serializers.ListSerializer(
+        child=serializers.DictField(),
+        write_only=True
+    )
 
     class Meta:
         model = Follow
@@ -101,6 +86,5 @@ class FollowSerializer(serializers.ModelSerializer):
                 "Вы уже подписаны на этого пользователя."
             )
         return data
-    
-#class SubscriptionSerializer(serializers.ModelSerializer):
 
+#class SubscriptionSerializer(serializers.ModelSerializer):
