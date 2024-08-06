@@ -15,7 +15,7 @@ urlpatterns = [
     path('auth/', include('djoser.urls')),
     path('auth/', include('djoser.urls.authtoken')),
     path('users/me/avatar/', AvatarView.as_view(), name='avatar'),
-    path('users/me/set_password/', ChangePasswordView.as_view(), name='change-password'),
+    # path('users/me/set_password/', ChangePasswordView.as_view(), name='change-password'),
     # path('api/users/subscriptions/', SubscriptionViewSet, name='subscriptions'),
     # path('api/users/<int:id>/subscribe/', FollowViewSet, name='follow'),
 ]
