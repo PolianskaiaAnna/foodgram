@@ -22,6 +22,7 @@ class CreateViewSet(viewsets.GenericViewSet,
 
 
 class AvatarView(APIView):
+    """Класс для создания и удаления аватара"""
     permission_classes = [IsAuthenticated]
 
     def put(self, request, *args, **kwargs):
@@ -77,7 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_serializer_class(self):
-        if self.action in ('list', 'retrieve'):
+        if self.action in ('list', 'retrieve', 'get_me'):
             return UserSerializer
         return UserCreateSerializer
 
@@ -87,7 +88,8 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=False, methods=['post'],
-        url_path='set_password', url_name='set_password'
+        url_path='set_password',
+        permission_classes=[permissions.IsAuthenticated],
     )
     def set_password(self, request):
         user = request.user
@@ -99,3 +101,14 @@ class UserViewSet(viewsets.ModelViewSet):
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(
+        detail=False, methods=['get'],
+        permission_classes=[permissions.IsAuthenticated],
+        url_path='me'
+    )
+    def get_me(self, request):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
+    

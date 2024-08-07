@@ -1,11 +1,14 @@
+import re
 from rest_framework import serializers
 
+from users.validators import username_validator, username_not_me
 from users.models import User, Follow
-# from recipes.serializers import RecipeReadSerializer
+from recipes.serializers import Base64ImageField
 
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
+    
 
     class Meta:
         model = User
@@ -24,6 +27,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        validators=[username_validator, username_not_me]
+    )
+    email = serializers.EmailField()
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+
     class Meta:
         model = User
         fields = (
@@ -47,9 +57,40 @@ class UserCreateSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation.pop('password', None)
         return representation
+    
+    def validate(self, data):
+        """
+        Функция проверяет, что связка юзернейм-email уникальна"""
+        email = data.get('email')
+        username = data.get('username')        
+        if username.lower() == 'me':
+            raise serializers.ValidationError('Нельзя использовать имя me')
+
+        user_with_email = User.objects.filter(email=email).first()
+        # Проверка на то, что нельзя использовать email,
+        # уже зарегистрированного пользователя
+        if user_with_email:
+            if user_with_email.username != username:
+                raise serializers.ValidationError(
+                    'Пользователь с таким email уже зарегистрирован'
+                )
+
+        user_with_username = User.objects.filter(username=username).first()
+        # Проверка на то, что нельзя использовать занятый юзернейм
+        if user_with_username:
+            if user_with_username.email != email:
+                raise serializers.ValidationError(
+                    'Пользователь с таким именем уже зарегистрирован'
+                )
+        return data
 
 
 class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField(
+        label='Изображение',
+        required=False, allow_null=True
+    )
+    
     class Meta:
         model = User
         fields = ['avatar']

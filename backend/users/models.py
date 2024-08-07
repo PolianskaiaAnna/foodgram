@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from users.validators import username_validator, username_not_me
+
 LENG_EMAIL = 254
 LENG_USER = 150
 
@@ -11,7 +13,8 @@ class User(AbstractUser):
     username = models.CharField(
         'Имя пользователя',
         max_length=LENG_USER,
-        unique=True
+        unique=True,
+        validators=[username_validator, username_not_me]
     )
     email = models.EmailField(
         'Email', max_length=LENG_EMAIL, unique=True
