@@ -3,7 +3,7 @@ from rest_framework import serializers
 
 from users.validators import username_validator, username_not_me
 from users.models import User, Follow
-from recipes.serializers import Base64ImageField
+from recipes.serializers import Base64ImageField, RecipeReadSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -90,14 +90,14 @@ class AvatarSerializer(serializers.ModelSerializer):
         label='Изображение',
         required=False, allow_null=True
     )
-    
+
     class Meta:
         model = User
         fields = ['avatar']
 
 
-class FollowSerializer(serializers.ModelSerializer):
-    """Класс, описывающий сериализатор для модели Follow"""
+class FollowCreateSerializer(serializers.ModelSerializer):
+    """Класс, описывающий сериализатор для подписки на других пользователей"""
     user = serializers.SlugRelatedField(
         read_only=True, slug_field='username',
         default=serializers.CurrentUserDefault()
@@ -105,10 +105,10 @@ class FollowSerializer(serializers.ModelSerializer):
     following = serializers.SlugRelatedField(
         queryset=User.objects.all(), slug_field='username'
     )
-    recipe = serializers.ListSerializer(
-        child=serializers.DictField(),
-        write_only=True
-    )
+    # recipes = serializers.ListSerializer(
+    #     child=serializers.DictField(),
+    #     write_only=True
+    # )
 
     class Meta:
         model = Follow
@@ -128,4 +128,35 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         return data
 
-#class SubscriptionSerializer(serializers.ModelSerializer):
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """
+    Класс отображает информацию о пользователях, на которых юзер подписан,
+    при этом показывая все рецепты пользователей и подсчитывая 
+    количество рецептов
+    """
+    is_subscribed = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            'id', 'username', 'first_name',
+            'last_name', 'email', 'is_subscribed',
+            'recipes_count', 'recipes', 'avatar'
+        )
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return Follow.objects.filter(
+                user=request.user, following=obj
+            ).exists()
+        return False
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        recipes = obj.recipes.all()
+        return RecipeReadSerializer(recipes, many=True).data

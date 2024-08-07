@@ -9,7 +9,7 @@ from djoser.serializers import SetPasswordSerializer
 
 from recipes.permissions import IsAuthorOrAdmin
 from users.serializers import (
-    AvatarSerializer, FollowSerializer,
+    AvatarSerializer, FollowCreateSerializer,
     UserSerializer, UserCreateSerializer
 )
 from users.models import User, Follow
@@ -39,18 +39,17 @@ class AvatarView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class FollowViewSet(CreateViewSet):
+class FollowCreate(CreateViewSet):
     """Класс, описывающий запросы к модели Follow"""
     queryset = Follow.objects.all()
-    serializer_class = FollowSerializer
-    permission_classes = (IsAuthorOrAdmin)
-    permission_classes = (permissions.IsAuthenticated,)
+    serializer_class = FollowCreateSerializer    
+    permission_classes = [IsAuthenticated]
     # filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     # filterset_fields = ('user', 'following')
     # search_fields = ('user__username', 'following__username')
 
-    def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+    # def get_queryset(self):
+    #     return Follow.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         following_username = self.request.data.get('following')
@@ -58,19 +57,19 @@ class FollowViewSet(CreateViewSet):
         serializer.save(user=self.request.user, following=following)
 
 
-# class SubscriptionViewSet(viewsets.ViewSet):
-#     """Возвращает список пользователей из подписок"""
-#     permission_classes = [IsAuthenticated]
+class FollowViewSet(viewsets.ViewSet):
+    """Возвращает список пользователей из подписок"""
+    permission_classes = [IsAuthenticated]
 
-#     # def get_queryset(self):
-#     #     queryset = Recipe.objects.annotate(count_recipe=Avg('recipes__score'))
-#     #     return queryset
+    # def get_queryset(self):
+    #     queryset = Recipe.objects.annotate(count_recipe=Avg('recipes__score'))
+    #     return queryset
 
-#     def list(self, request):
-#         user = request.user
-#         follows = Follow.objects.filter(user=user)
-#         serializer = FollowSerializer(follows, many=True)
-#         return Response(serializer.data)
+    def list(self, request):
+        user = request.user
+        follows = Follow.objects.filter(user=user)
+        serializer = FollowCreateSerializer(follows, many=True)
+        return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):
