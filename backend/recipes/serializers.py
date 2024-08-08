@@ -201,6 +201,28 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
             user=user, recipe=obj
         ).exists()
 
+
+class RecipeFollowSerializer(serializers.ModelSerializer):
+    """Сериализатор для отображения рецепта из подписок"""    
+    class Meta:
+        model = Recipe
+        fields = (
+            'id', 'name', 'image',
+            'cooking_time'
+        )
+
+    def get_is_favorited(self, obj):
+        user = self.context['request'].user
+        return user.is_authenticated and Favorite.objects.filter(
+            user=user, recipe=obj
+        ).exists()
+
+    def get_is_in_shopping_cart(self, obj):
+        user = self.context['request'].user
+        return user.is_authenticated and ShoppingList.objects.filter(
+            user=user, recipe=obj
+        ).exists()
+
 #для картинок
 # image_url = serializers.SerializerMethodField(
     #     'get_image_url',
