@@ -8,7 +8,7 @@ from recipes.models import (
     Favorite, ShoppingCart, TagRecipe,
     IngredientRecipe
 )
-from users.models import User, Follow
+from users.models import User, Subscribe
 
 
 class Base64ImageField(serializers.ImageField):
@@ -71,7 +71,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         "Проверка подписки"
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(
+            return Subscribe.objects.filter(
                 user=request.user, following=obj
             ).exists()
         return False
@@ -202,7 +202,7 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
         ).exists()
 
 
-class RecipeFollowSerializer(serializers.ModelSerializer):
+class RecipeSubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения рецепта из подписок, избранного, списка покупок"""
     class Meta:
         model = Recipe
@@ -246,35 +246,4 @@ class ShoppingCartSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ShoppingCart
-        fields = ('id', 'name', 'image', 'cooking_time' )
-
-    
-
-
-class FollowSerializer(serializers.ModelSerializer):
-    """Класс, описывающий сериализатор для модели Follow"""
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
-        default=serializers.CurrentUserDefault()
-    )
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field='username'
-    )
-
-    class Meta:
-        model = Follow
-        fields = '__all__'
-
-    def validate(self, data):
-        current_user = self.context['request'].user
-        following = data['following']
-        if current_user == following:
-            raise serializers.ValidationError("Нельзя подписаться на себя.")
-        if Follow.objects.filter(
-            user=current_user,
-            following=following
-        ).exists():
-            raise serializers.ValidationError(
-                "Вы уже подписаны на этого пользователя."
-            )
-        return data
+        fields = ('id', 'name', 'image', 'cooking_time')

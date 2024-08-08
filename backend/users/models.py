@@ -39,7 +39,7 @@ class User(AbstractUser):
         return self.email
 
 
-class Follow(models.Model):
+class Subscribe(models.Model):
     """Модель подписки пользователей друг на друга"""
     user = models.ForeignKey(
         User, on_delete=models.CASCADE,

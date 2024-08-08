@@ -8,13 +8,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from djoser.serializers import SetPasswordSerializer
 
-from recipes.permissions import IsAuthorOrAdmin
 from users.serializers import (
     AvatarSerializer,
     UserSerializer, UserCreateSerializer,
     SubscriptionSerializer
 )
-from users.models import User, Follow
+from users.models import User, Subscribe
 
 
 class CreateViewSet(viewsets.GenericViewSet,
@@ -41,28 +40,7 @@ class AvatarView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-# class FollowCreate(CreateViewSet):
-#     """Класс, описывающий запросы к модели Follow"""
-#     queryset = Follow.objects.all()
-#     serializer_class = FollowCreateSerializer
-#     permission_classes = [IsAuthenticated]
-#     # filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-#     # filterset_fields = ('user', 'following')
-#     # search_fields = ('user__username', 'following__username')
-
-#     # def get_queryset(self):
-#     #     return Follow.objects.filter(user=self.request.user)
-
-#     def perform_create(self, serializer):
-#         following_username = self.request.data.get('following')
-#         following = get_object_or_404(User, username=following_username)
-#         serializer.save(user=self.request.user, following=following)
-
-class CustomLimitOffsetPagination(LimitOffsetPagination):
-    default_limit = 6
-
-
-class FollowUserView(APIView):
+class SubscribeUserView(APIView):
     """Создает подписку на пользователя"""
     permission_classes = [IsAuthenticated]
 
@@ -71,17 +49,29 @@ class FollowUserView(APIView):
         following = get_object_or_404(User, id=id)
 
         if user == following:
-            return Response({"detail": "Нельзя подписаться на себя."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        if Follow.objects.filter(user=user, following=following).exists():
-            return Response({"detail": "Вы уже подписаны на этого пользователя."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        Follow.objects.create(user=user, following=following)
-        serialized_following = SubscriptionSerializer(following, context={'request': request})
-        return Response(serialized_following.data, status=status.HTTP_201_CREATED)
-    
+            return Response(
+                {"detail": "Нельзя подписаться на себя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-class FollowViewSet(viewsets.ViewSet):
+        if Subscribe.objects.filter(
+            user=user, following=following
+        ).exists():
+            return Response(
+                {"detail": "Вы уже подписаны на этого пользователя."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        Subscribe.objects.create(user=user, following=following)
+        serialized_following = SubscriptionSerializer(
+            following, context={'request': request}
+        )
+        return Response(
+            serialized_following.data, status=status.HTTP_201_CREATED
+        )
+
+
+class SubscribeViewSet(viewsets.ViewSet):
     """Возвращает список пользователей из подписок"""
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
@@ -93,15 +83,19 @@ class FollowViewSet(viewsets.ViewSet):
 
     def list(self, request):
         user = request.user
-        follows = Follow.objects.filter(user=user)
-        followed_users = [follow.following for follow in follows]
+        follows = Subscribe.objects.filter(user=user)
+        followed_users = [
+            follow.following for follow in follows
+        ]
         # paginator = self.pagination_class()
         # page = paginator.paginate_queryset(followed_users, request)
 
         # if page is not None:
         #     serializer = SubscriptionSerializer(page, many=True, context={'request': request})
         #     return paginator.get_paginated_response(serializer.data)
-        serializer = SubscriptionSerializer(followed_users, many=True, context={'request': request})
+        serializer = SubscriptionSerializer(
+            followed_users, many=True, context={'request': request}
+        )
         return Response(serializer.data)
 
 
@@ -136,7 +130,7 @@ class UserViewSet(viewsets.ModelViewSet):
             user.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
     @action(
         detail=False, methods=['get'],
         permission_classes=[permissions.IsAuthenticated],
@@ -146,4 +140,3 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer = self.get_serializer(user)
         return Response(serializer.data)
-    

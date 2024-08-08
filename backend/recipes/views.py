@@ -2,15 +2,18 @@ import io
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
-from django.core.files.base import ContentFile
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly, IsAuthenticated
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
-from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingCart, IngredientRecipe
+from recipes.models import (
+    Recipe, Tag, Ingredient, Favorite, ShoppingCart, IngredientRecipe
+)
 from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
 from recipes.serializers import (
     TagSerializer,
@@ -80,21 +83,23 @@ class FavoriteViewSet(APIView):
     def post(self, request, id):
         user = request.user
         recipe = get_object_or_404(Recipe, id=id)
-        
+
         if Favorite.objects.filter(user=user, recipe=recipe).exists():
             return Response(
                 {"detail": "Вы уже добавили этот рецепт в избранное"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         favorite = Favorite.objects.create(user=user, recipe=recipe)
-        
-        serialized_favorited = FavoriteSerializer(favorite, context={'request': request})
+
+        serialized_favorited = FavoriteSerializer(
+            favorite, context={'request': request}
+        )
         return Response(
             serialized_favorited.data,
             status=status.HTTP_201_CREATED
         )
-    
+
     def delete(self, request, *args, **kwargs):
         user = request.user
         recipe_id = kwargs.get('id')
@@ -104,25 +109,24 @@ class FavoriteViewSet(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-
 class ShoppingCartViewSet(ViewSet):
     """Класс, описывающий запросы к модели списка покупок """
     permission_classes = [IsAuthenticated]
 
-
     @action(detail=True, methods=['post'])
     def post(self, request, id):
+        """Добавление в список покупок"""
         user = request.user
         recipe = get_object_or_404(Recipe, id=id)
-        
+
         if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
             return Response(
                 {"detail": "Вы уже добавили этот рецепт в список покупок"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         favorite = ShoppingCart.objects.create(user=user, recipe=recipe)
-        
+
         serialized_favorited = ShoppingCartSerializer(
             favorite, context={'request': request}
         )
@@ -130,23 +134,23 @@ class ShoppingCartViewSet(ViewSet):
             serialized_favorited.data,
             status=status.HTTP_201_CREATED
         )
-    
 
     @action(detail=True, methods=['delete'])
     def delete(self, request, *args, **kwargs):
+        """Удаление из списка покупок"""
         user = request.user
         recipe_id = kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
         favorite = get_object_or_404(ShoppingCart, user=user, recipe=recipe)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
         user = request.user
         shopping_lists = ShoppingCart.objects.filter(user=user)
         ingredients = {}
-        
+
         for shopping_list in shopping_lists:
             recipe = shopping_list.recipe
             for ingredient_recipe in IngredientRecipe.objects.filter(
@@ -158,7 +162,7 @@ class ShoppingCartViewSet(ViewSet):
                     ingredients[ingredient_name] += ingredient_amount
                 else:
                     ingredients[ingredient_name] = ingredient_amount
-       
+
         file_content = self.generate_txt(ingredients)
         content_type = 'text/plain'
         extension = 'txt'
@@ -177,4 +181,3 @@ class ShoppingCartViewSet(ViewSet):
         for name, amount in ingredients.items():
             content += f"{name} — {amount}\n"
         return content.encode('utf-8')
-

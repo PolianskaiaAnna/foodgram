@@ -1,14 +1,12 @@
-import re
 from rest_framework import serializers
 
 from users.validators import username_validator, username_not_me
-from users.models import User, Follow
-from recipes.serializers import Base64ImageField, RecipeReadSerializer, RecipeFollowSerializer
+from users.models import User, Subscribe
+from recipes.serializers import Base64ImageField, RecipeSubscribeSerializer
 
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
-    
 
     class Meta:
         model = User
@@ -20,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(
+            return Subscribe.objects.filter(
                 user=request.user, following=obj
             ).exists()
         return False
@@ -57,12 +55,12 @@ class UserCreateSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation.pop('password', None)
         return representation
-    
+
     def validate(self, data):
         """
         Функция проверяет, что связка юзернейм-email уникальна"""
         email = data.get('email')
-        username = data.get('username')        
+        username = data.get('username')
         if username.lower() == 'me':
             raise serializers.ValidationError('Нельзя использовать имя me')
 
@@ -96,42 +94,10 @@ class AvatarSerializer(serializers.ModelSerializer):
         fields = ['avatar']
 
 
-# class FollowCreateSerializer(serializers.ModelSerializer):
-#     """Класс, описывающий сериализатор для подписки на других пользователей"""
-#     user = serializers.SlugRelatedField(
-#         read_only=True, slug_field='username',
-#         default=serializers.CurrentUserDefault()
-#     )
-#     following = serializers.PrimaryKeyRelatedField(
-#         queryset=User.objects.all()
-#     )
-#     # recipes = serializers.ListSerializer(
-#     #     child=serializers.DictField(),
-#     #     write_only=True
-#     # )
-
-#     class Meta:
-#         model = Follow
-#         fields = '__all__'
-
-#     def validate(self, data):
-#         current_user = self.context['request'].user
-#         following = data['following']
-#         if current_user == following:
-#             raise serializers.ValidationError("Нельзя подписаться на себя.")
-#         if Follow.objects.filter(
-#             user=current_user,
-#             following=following
-#         ).exists():
-#             raise serializers.ValidationError(
-#                 "Вы уже подписаны на этого пользователя."
-#             )
-#         return data
-
 class SubscriptionSerializer(serializers.ModelSerializer):
     """
     Класс отображает информацию о пользователях, на которых юзер подписан,
-    при этом показывая все рецепты пользователей и подсчитывая 
+    при этом показывая все рецепты пользователей и подсчитывая
     количество рецептов
     """
     is_subscribed = serializers.SerializerMethodField()
@@ -149,7 +115,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return Follow.objects.filter(
+            return Subscribe.objects.filter(
                 user=request.user, following=obj
             ).exists()
         return False
@@ -160,8 +126,43 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     def get_recipes(self, obj):
         # recipes = obj.recipes.all()
         # return RecipeReadSerializer(recipes, many=True).data
-        recipes_limit = self.context['request'].query_params.get('recipes_limit')
+        recipes_limit = self.context['request'].query_params.get(
+            'recipes_limit'
+        )
         recipes = obj.recipes.all()
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
-        return RecipeFollowSerializer(recipes, many=True, context=self.context).data
+        return RecipeSubscribeSerializer(
+            recipes, many=True, context=self.context
+        ).data
+
+
+class SubscribeSerializer(serializers.ModelSerializer):
+    """
+    Класс, описывающий сериализатор для модели подписки на других пользователей
+    """
+    user = serializers.SlugRelatedField(
+        read_only=True, slug_field='username',
+        default=serializers.CurrentUserDefault()
+    )
+    following = serializers.SlugRelatedField(
+        queryset=User.objects.all(), slug_field='username'
+    )
+
+    class Meta:
+        model = Subscribe
+        fields = '__all__'
+
+    def validate(self, data):
+        current_user = self.context['request'].user
+        following = data['following']
+        if current_user == following:
+            raise serializers.ValidationError("Нельзя подписаться на себя.")
+        if Subscribe.objects.filter(
+            user=current_user,
+            following=following
+        ).exists():
+            raise serializers.ValidationError(
+                "Вы уже подписаны на этого пользователя."
+            )
+        return data
