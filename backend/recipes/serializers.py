@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from recipes.models import (
     Ingredient, Tag, Recipe,
-    Favorite, ShoppingList, TagRecipe,
+    Favorite, ShoppingCart, TagRecipe,
     IngredientRecipe
 )
 from users.models import User, Follow
@@ -105,7 +105,7 @@ class RecipeReadSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and ShoppingList.objects.filter(
+        return user.is_authenticated and ShoppingCart.objects.filter(
             user=user, recipe=obj
         ).exists()
 
@@ -197,13 +197,13 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and ShoppingList.objects.filter(
+        return user.is_authenticated and ShoppingCart.objects.filter(
             user=user, recipe=obj
         ).exists()
 
 
 class RecipeFollowSerializer(serializers.ModelSerializer):
-    """Сериализатор для отображения рецепта из подписок, избранного, списка покупок"""    
+    """Сериализатор для отображения рецепта из подписок, избранного, списка покупок"""
     class Meta:
         model = Recipe
         fields = (
@@ -219,20 +219,9 @@ class RecipeFollowSerializer(serializers.ModelSerializer):
 
     def get_is_in_shopping_cart(self, obj):
         user = self.context['request'].user
-        return user.is_authenticated and ShoppingList.objects.filter(
+        return user.is_authenticated and ShoppingCart.objects.filter(
             user=user, recipe=obj
         ).exists()
-
-#для картинок
-# image_url = serializers.SerializerMethodField(
-    #     'get_image_url',
-    #     read_only=True,
-    # )
-
-    # def get_image_url(self, obj):
-    #     if obj.image:
-    #         return obj.image.url
-    #     return None
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
@@ -242,13 +231,12 @@ class FavoriteSerializer(serializers.ModelSerializer):
     image = serializers.CharField(source='recipe.image')
     cooking_time = serializers.IntegerField(source='recipe.cooking_time')
 
-
     class Meta:
         model = Favorite
-        fields = ('id', 'name', 'image', 'cooking_time' )
+        fields = ('id', 'name', 'image', 'cooking_time')
 
 
-class ShoppingListSerializer(serializers.ModelSerializer):
+class ShoppingCartSerializer(serializers.ModelSerializer):
     """Сериализатор для списка покупок"""
 
     id = serializers.IntegerField(source='recipe.id')
@@ -257,7 +245,7 @@ class ShoppingListSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(source='recipe.cooking_time')
 
     class Meta:
-        model = ShoppingList
+        model = ShoppingCart
         fields = ('id', 'name', 'image', 'cooking_time' )
 
     

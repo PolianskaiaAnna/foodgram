@@ -10,12 +10,12 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
-from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList, IngredientRecipe
+from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingCart, IngredientRecipe
 from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
 from recipes.serializers import (
     TagSerializer,
     IngredientSerializer,
-    ShoppingListSerializer,
+    ShoppingCartSerializer,
     FavoriteSerializer, RecipeReadSerializer,
     RecipeCreateSerizalizer
 )
@@ -82,12 +82,18 @@ class FavoriteViewSet(APIView):
         recipe = get_object_or_404(Recipe, id=id)
         
         if Favorite.objects.filter(user=user, recipe=recipe).exists():
-            return Response({"detail": "Вы уже добавили этот рецепт в избранное"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Вы уже добавили этот рецепт в избранное"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         favorite = Favorite.objects.create(user=user, recipe=recipe)
         
         serialized_favorited = FavoriteSerializer(favorite, context={'request': request})
-        return Response(serialized_favorited.data, status=status.HTTP_201_CREATED)
+        return Response(
+            serialized_favorited.data,
+            status=status.HTTP_201_CREATED
+        )
     
     def delete(self, request, *args, **kwargs):
         user = request.user
@@ -99,7 +105,7 @@ class FavoriteViewSet(APIView):
 
 
 
-class ShoppingListViewSet(ViewSet):
+class ShoppingCartViewSet(ViewSet):
     """Класс, описывающий запросы к модели списка покупок """
     permission_classes = [IsAuthenticated]
 
@@ -109,13 +115,21 @@ class ShoppingListViewSet(ViewSet):
         user = request.user
         recipe = get_object_or_404(Recipe, id=id)
         
-        if ShoppingList.objects.filter(user=user, recipe=recipe).exists():
-            return Response({"detail": "Вы уже добавили этот рецепт в список покупок"}, status=status.HTTP_400_BAD_REQUEST)
+        if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            return Response(
+                {"detail": "Вы уже добавили этот рецепт в список покупок"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
-        favorite = ShoppingList.objects.create(user=user, recipe=recipe)
+        favorite = ShoppingCart.objects.create(user=user, recipe=recipe)
         
-        serialized_favorited = ShoppingListSerializer(favorite, context={'request': request})
-        return Response(serialized_favorited.data, status=status.HTTP_201_CREATED)
+        serialized_favorited = ShoppingCartSerializer(
+            favorite, context={'request': request}
+        )
+        return Response(
+            serialized_favorited.data,
+            status=status.HTTP_201_CREATED
+        )
     
 
     @action(detail=True, methods=['delete'])
@@ -123,19 +137,21 @@ class ShoppingListViewSet(ViewSet):
         user = request.user
         recipe_id = kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        favorite = get_object_or_404(ShoppingList, user=user, recipe=recipe)
+        favorite = get_object_or_404(ShoppingCart, user=user, recipe=recipe)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
     
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
         user = request.user
-        shopping_lists = ShoppingList.objects.filter(user=user)
+        shopping_lists = ShoppingCart.objects.filter(user=user)
         ingredients = {}
         
         for shopping_list in shopping_lists:
             recipe = shopping_list.recipe
-            for ingredient_recipe in IngredientRecipe.objects.filter(recipe=recipe):
+            for ingredient_recipe in IngredientRecipe.objects.filter(
+                recipe=recipe
+            ):
                 ingredient_name = ingredient_recipe.ingredient.name
                 ingredient_amount = ingredient_recipe.amount
                 if ingredient_name in ingredients:
@@ -151,7 +167,9 @@ class ShoppingListViewSet(ViewSet):
             io.BytesIO(file_content),
             content_type=content_type
         )
-        response['Content-Disposition'] = f'attachment; filename="shopping_list.{extension}"'
+        response[
+            'Content-Disposition'
+        ] = f'attachment; filename="shopping_cart.{extension}"'
         return response
 
     def generate_txt(self, ingredients):
