@@ -251,9 +251,16 @@ class FavoriteSerializer(serializers.ModelSerializer):
 class ShoppingListSerializer(serializers.ModelSerializer):
     """Сериализатор для списка покупок"""
 
+    id = serializers.IntegerField(source='recipe.id')
+    name = serializers.CharField(source='recipe.name')
+    image = serializers.CharField(source='recipe.image')
+    cooking_time = serializers.IntegerField(source='recipe.cooking_time')
+
     class Meta:
         model = ShoppingList
-        fields = ('user', 'recipe')
+        fields = ('id', 'name', 'image', 'cooking_time' )
+
+    
 
 
 class FollowSerializer(serializers.ModelSerializer):

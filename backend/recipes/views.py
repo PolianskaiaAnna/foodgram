@@ -1,11 +1,16 @@
+import io
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
+from django.http import FileResponse
+from django.core.files.base import ContentFile
 from rest_framework import filters, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSet
 
-from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList
+from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList, IngredientRecipe
 from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
 from recipes.serializers import (
     TagSerializer,
@@ -94,19 +99,64 @@ class FavoriteViewSet(APIView):
 
 
 
-class ShoppingListViewSet(APIView):
+class ShoppingListViewSet(ViewSet):
     """Класс, описывающий запросы к модели списка покупок """
-    pass
-    # def post(self, request, id):
-    #     user = request.user
-    #     following = get_object_or_404(User, id=id)
+    permission_classes = [IsAuthenticated]
 
-    #     if user == following:
-    #         return Response({"detail": "Нельзя подписаться на себя."}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def post(self, request, id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
         
-    #     if Follow.objects.filter(user=user, following=following).exists():
-    #         return Response({"detail": "Вы уже подписаны на этого пользователя."}, status=status.HTTP_400_BAD_REQUEST)
+        if ShoppingList.objects.filter(user=user, recipe=recipe).exists():
+            return Response({"detail": "Вы уже добавили этот рецепт в список покупок"}, status=status.HTTP_400_BAD_REQUEST)
         
-    #     Follow.objects.create(user=user, following=following)
-    #     serialized_following = SubscriptionSerializer(following, context={'request': request})
-    #     return Response(serialized_following.data, status=status.HTTP_201_CREATED)
+        favorite = ShoppingList.objects.create(user=user, recipe=recipe)
+        
+        serialized_favorited = ShoppingListSerializer(favorite, context={'request': request})
+        return Response(serialized_favorited.data, status=status.HTTP_201_CREATED)
+    
+
+    @action(detail=True, methods=['delete'])
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        recipe_id = kwargs.get('id')
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        favorite = get_object_or_404(ShoppingList, user=user, recipe=recipe)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'])
+    def download_shopping_cart(self, request):
+        user = request.user
+        shopping_lists = ShoppingList.objects.filter(user=user)
+        ingredients = {}
+        
+        for shopping_list in shopping_lists:
+            recipe = shopping_list.recipe
+            for ingredient_recipe in IngredientRecipe.objects.filter(recipe=recipe):
+                ingredient_name = ingredient_recipe.ingredient.name
+                ingredient_amount = ingredient_recipe.amount
+                if ingredient_name in ingredients:
+                    ingredients[ingredient_name] += ingredient_amount
+                else:
+                    ingredients[ingredient_name] = ingredient_amount
+       
+        file_content = self.generate_txt(ingredients)
+        content_type = 'text/plain'
+        extension = 'txt'
+
+        response = FileResponse(
+            io.BytesIO(file_content),
+            content_type=content_type
+        )
+        response['Content-Disposition'] = f'attachment; filename="shopping_list.{extension}"'
+        return response
+
+    def generate_txt(self, ingredients):
+        content = ""
+        for name, amount in ingredients.items():
+            content += f"{name} — {amount}\n"
+        return content.encode('utf-8')
+
