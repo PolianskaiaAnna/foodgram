@@ -1,7 +1,9 @@
 from django_filters.rest_framework import DjangoFilterBackend
+from django.shortcuts import get_object_or_404
 from rest_framework import filters, status, viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from recipes.models import Recipe, Tag, Ingredient, Favorite, ShoppingList
 from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
@@ -66,13 +68,45 @@ class IngredientViewSet(viewsets.ModelViewSet):
     pagination_class = None
 
 
-class FavoriteViewSet(viewsets.ModelViewSet):
+class FavoriteViewSet(APIView):
     """Класс, описывающий запросы к модели избранного """
-    queryset = Favorite.objects.all()
-    serializer_class = FavoriteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, id):
+        user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
+        
+        if Favorite.objects.filter(user=user, recipe=recipe).exists():
+            return Response({"detail": "Вы уже добавили этот рецепт в избранное"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        favorite = Favorite.objects.create(user=user, recipe=recipe)
+        
+        serialized_favorited = FavoriteSerializer(favorite, context={'request': request})
+        return Response(serialized_favorited.data, status=status.HTTP_201_CREATED)
+    
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        recipe_id = kwargs.get('id')
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class ShoppingListViewSet(viewsets.ModelViewSet):
+
+class ShoppingListViewSet(APIView):
     """Класс, описывающий запросы к модели списка покупок """
-    queryset = ShoppingList.objects.all()
-    serializer_class = ShoppingListSerializer
+    pass
+    # def post(self, request, id):
+    #     user = request.user
+    #     following = get_object_or_404(User, id=id)
+
+    #     if user == following:
+    #         return Response({"detail": "Нельзя подписаться на себя."}, status=status.HTTP_400_BAD_REQUEST)
+        
+    #     if Follow.objects.filter(user=user, following=following).exists():
+    #         return Response({"detail": "Вы уже подписаны на этого пользователя."}, status=status.HTTP_400_BAD_REQUEST)
+        
+    #     Follow.objects.create(user=user, following=following)
+    #     serialized_following = SubscriptionSerializer(following, context={'request': request})
+    #     return Response(serialized_following.data, status=status.HTTP_201_CREATED)

@@ -8,15 +8,6 @@ from recipes.views import (
 
 router_vers1 = routers.DefaultRouter()
 
-# router_vers1.register(
-#     r'recipes/(?P<recipe_id>\d+)/favorite',
-#     FavoriteViewSet, basename='favorites'
-# )
-
-# router_vers1.register(
-#     r'recipes/(?P<recipe_id>\d+)/shopping_cart',
-#     ShoppingListViewSet, basename='shopping_list'
-# )
 
 router_vers1.register(
     'recipes', RecipeViewSet, basename='recipes'
@@ -29,5 +20,8 @@ router_vers1.register(
 )
 
 urlpatterns = [
+    
+    path('recipes/<int:id>/favorite/', FavoriteViewSet.as_view(), name='favorite'),
+    path('recipes/<int:id>/shopping_cart/', ShoppingListViewSet.as_view(), name='in_shoping_cart'),
     path('', include(router_vers1.urls)),
 ]

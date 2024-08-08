@@ -95,12 +95,12 @@ class FollowViewSet(viewsets.ViewSet):
         user = request.user
         follows = Follow.objects.filter(user=user)
         followed_users = [follow.following for follow in follows]
-        paginator = self.pagination_class()
-        page = paginator.paginate_queryset(followed_users, request)
+        # paginator = self.pagination_class()
+        # page = paginator.paginate_queryset(followed_users, request)
 
-        if page is not None:
-            serializer = SubscriptionSerializer(page, many=True, context={'request': request})
-            return paginator.get_paginated_response(serializer.data)
+        # if page is not None:
+        #     serializer = SubscriptionSerializer(page, many=True, context={'request': request})
+        #     return paginator.get_paginated_response(serializer.data)
         serializer = SubscriptionSerializer(followed_users, many=True, context={'request': request})
         return Response(serializer.data)
 
