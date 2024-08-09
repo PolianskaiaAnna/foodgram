@@ -26,7 +26,7 @@ class User(AbstractUser):
         'Фамилия', blank=True, max_length=LENG_USER
     )
     avatar = models.ImageField(
-        upload_to='users/avatars/',
+        upload_to='static/avatars/',
         null=True, blank=True
     )
 

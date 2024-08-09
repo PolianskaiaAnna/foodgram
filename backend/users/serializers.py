@@ -4,6 +4,8 @@ from users.validators import username_validator, username_not_me
 from users.models import User, Subscribe
 from recipes.serializers import Base64ImageField, RecipeSubscribeSerializer
 
+LENG_EMAIL = 254
+LENG_USER = 150
 
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
@@ -26,11 +28,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
+        max_length=LENG_USER,
         validators=[username_validator, username_not_me]
     )
-    email = serializers.EmailField()
-    first_name = serializers.CharField()
-    last_name = serializers.CharField()
+    email = serializers.EmailField(max_length=LENG_EMAIL)
+    first_name = serializers.CharField(max_length=LENG_USER)
+    last_name = serializers.CharField(max_length=LENG_USER)
 
     class Meta:
         model = User

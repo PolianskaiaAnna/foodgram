@@ -109,6 +109,12 @@ REST_FRAMEWORK = {
 }
 
 
+# STATIC_URL = '/static/'
+# STATIC_ROOT = BASE_DIR / 'collected_static'
+
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = '/media/'
+
 DJOSER = {
     'USER_ID_FIELD': 'id',
     'LOGIN_FIELD': 'email',

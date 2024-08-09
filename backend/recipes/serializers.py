@@ -119,6 +119,21 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
             'is_favorited', 'is_in_shopping_cart', 'author'
         )
 
+    def validate(self, data):
+        """
+        Проверка на отсутствие повторяющихся тегов
+        и ингредиентов
+        """
+        tags = data.get('tags')
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError("Теги не могут использоваться повторно")
+        
+        ingredients = data.get('ingredients')
+        ingredient_list = [ingredient['ingredient'].id for ingredient in ingredients]
+        if len(ingredient_list) != len(set(ingredient_list)):
+            raise serializers.ValidationError("Ингредиенты не могут использоваться повторно")        
+        return data
+
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')

@@ -28,6 +28,11 @@ class AvatarView(APIView):
 
     def put(self, request, *args, **kwargs):
         user = request.user
+        if 'avatar' not in request.data:
+            return Response(
+                {'detail': 'Поле `avatar` отсутствует в запросе'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = AvatarSerializer(user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
