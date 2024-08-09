@@ -8,6 +8,7 @@ from recipes.models import (
     Favorite, ShoppingCart, TagRecipe,
     IngredientRecipe
 )
+from recipes.mixins import RecipeStatusMixin
 from users.models import User, Subscribe
 
 
@@ -77,16 +78,12 @@ class AuthorSerializer(serializers.ModelSerializer):
         return False
 
 
-class RecipeReadSerializer(serializers.ModelSerializer):
+class RecipeReadSerializer(RecipeStatusMixin, serializers.ModelSerializer):
     """Сериализатор для чтения рецептов"""
     ingredients = IngredientRecipeSerializer(
         source='ingredientrecipe_set', many=True
     )
-    tags = TagSerializer(many=True, read_only=True)
-    is_favorited = serializers.SerializerMethodField('get_is_favorited')
-    is_in_shopping_cart = serializers.SerializerMethodField(
-        'get_is_in_shopping_cart'
-    )
+    tags = TagSerializer(many=True, read_only=True)    
     author = AuthorSerializer(read_only=True)
 
     class Meta:
@@ -97,25 +94,9 @@ class RecipeReadSerializer(serializers.ModelSerializer):
             'text', 'cooking_time'
         )
 
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and Favorite.objects.filter(
-            user=user, recipe=obj
-        ).exists()
 
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and ShoppingCart.objects.filter(
-            user=user, recipe=obj
-        ).exists()
-
-
-class RecipeCreateSerizalizer(serializers.ModelSerializer):
+class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
     """Сериализатор для создания рецептов"""
-    is_favorited = serializers.SerializerMethodField('get_is_favorited')
-    is_in_shopping_cart = serializers.SerializerMethodField(
-        'get_is_in_shopping_cart'
-    )
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = IngredientRecipeSerializer(
         many=True, write_only=True,
@@ -195,18 +176,6 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
 
         return instance
 
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and Favorite.objects.filter(
-            user=user, recipe=obj
-        ).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and ShoppingCart.objects.filter(
-            user=user, recipe=obj
-        ).exists()
-
 
 class RecipeSubscribeSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения рецепта из подписок, избранного, списка покупок"""
@@ -216,18 +185,6 @@ class RecipeSubscribeSerializer(serializers.ModelSerializer):
             'id', 'name', 'image',
             'cooking_time'
         )
-
-    def get_is_favorited(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and Favorite.objects.filter(
-            user=user, recipe=obj
-        ).exists()
-
-    def get_is_in_shopping_cart(self, obj):
-        user = self.context['request'].user
-        return user.is_authenticated and ShoppingCart.objects.filter(
-            user=user, recipe=obj
-        ).exists()
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
