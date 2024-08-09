@@ -1,5 +1,5 @@
 import base64
-
+import shortuuid
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
@@ -143,6 +143,9 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
         tags_data = validated_data.pop('tags')
 
         recipe = Recipe.objects.create(**validated_data)
+        # Создание короткой ссылки
+        if not validated_data.get('short_link'):
+            validated_data['short_link'] = shortuuid.uuid()
 
         for tag in tags_data:
             TagRecipe.objects.create(recipe=recipe, tag=tag)
@@ -170,6 +173,9 @@ class RecipeCreateSerizalizer(serializers.ModelSerializer):
         )
         instance.image = validated_data.get('image', instance.image)
         instance.save()
+
+        if not instance.short_link:
+            instance.short_link = shortuuid.uuid()
 
         if tags_data:
             tag_ids = [tag.id for tag in tags_data]

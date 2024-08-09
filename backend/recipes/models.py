@@ -67,6 +67,9 @@ class Recipe(models.Model):
         on_delete=models.CASCADE,
         related_name='recipes',
     )
+    short_link = models.CharField(
+        max_length=22, unique=True, blank=True, null=True
+    )
 
     class Meta:
         verbose_name = 'Рецепт'

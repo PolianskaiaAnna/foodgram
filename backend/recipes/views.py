@@ -1,7 +1,9 @@
 import io
+import shortuuid
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.http import FileResponse
+from django.views import View
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -23,13 +25,36 @@ from recipes.serializers import (
     RecipeCreateSerizalizer
 )
 
+class RecipeFilterBackend(filters.BaseFilterBackend):
+    """Фильтрация по избранному и корзине"""
+    def filter_queryset(self, request, queryset, view):
+        user = request.user
+        is_favorited = request.query_params.get('is_favorited')
+        is_in_shopping_cart = request.query_params.get('is_in_shopping_cart')
+
+        if user.is_authenticated:
+            if is_favorited is not None:
+                # queryset = queryset.filter(favorited_by=user)
+                if is_favorited.lower() == 'true':
+                    queryset = queryset.filter(favorited_by__user=user)
+                else:
+                    queryset = queryset.exclude(favorited_by__user=user)
+
+            if is_in_shopping_cart is not None:
+                # queryset = queryset.filter(in_shopping_cart=user)
+                if is_in_shopping_cart.lower() == 'true':
+                    queryset = queryset.filter(in_shopping_cart__user=user)
+                else:
+                    queryset = queryset.exclude(in_shopping_cart__user=user)
+        return queryset
+
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdmin]
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, RecipeFilterBackend)
     filterset_fields = ('author', 'tags')
 
     def get_serializer_class(self):
@@ -56,6 +81,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
             context={'request': request}
         )
         return Response(read_serializer.data, status=status.HTTP_200_OK)
+    
+
+    @action(detail=True, methods=['get'], url_path='get-link')
+    def get_short_link(self, request, pk=None):        
+        recipe = self.get_object()
+        if not recipe.short_link:
+            recipe.short_link = shortuuid.uuid()
+            recipe.save()
+
+        # Заменить на адрес сайта!
+        short_link_url = f"127.0.0.1:8000/s/{recipe.short_link}"
+        return Response({'short-link': short_link_url}, status=status.HTTP_200_OK)
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -181,3 +218,10 @@ class ShoppingCartViewSet(ViewSet):
         for name, amount in ingredients.items():
             content += f"{name} — {amount}\n"
         return content.encode('utf-8')
+    
+
+class DecodeView(View):
+    """Функция открывает рецепт по переданной короткой ссылке"""
+    def get(self, request, short_link, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, short_link=short_link)
+        return redirect('recipe-detail', pk=recipe.pk)
