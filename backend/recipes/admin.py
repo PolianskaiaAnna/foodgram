@@ -10,7 +10,8 @@ class RecipeAdmin(admin.ModelAdmin):
         'text',
         'cooking_time',
         'author',
-        'short_link'
+        'short_link',
+        'favorited_count'
     )
     list_editable = (
         'name',
@@ -22,9 +23,17 @@ class RecipeAdmin(admin.ModelAdmin):
     filter_horizontal = ('ingredients', 'tags')
 
 
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        'name',
+        'measurement_unit'
+    )
+    
+    search_fields = ('name',)
+
+
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Ingredient)
+admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Tag)
 admin.site.register(ShoppingCart)
 admin.site.register(Favorite)
-

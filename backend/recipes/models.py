@@ -78,6 +78,10 @@ class Recipe(models.Model):
 
     def __str__(self):
         return self.name
+    
+    def favorited_count(self):
+        """Показывает сколько раз рецепт был добавлен в избранное."""
+        return self.favorited_by.count()
 
 
 class TagRecipe(models.Model):

@@ -12,10 +12,10 @@ class UserAdmin(admin.ModelAdmin):
     )
     list_editable = (
         'first_name',
-        'last_name',    
+        'last_name',
     )
     search_fields = ('username', 'email')
-   
+
 
 admin.site.register(User, UserAdmin)
 admin.site.register(Subscribe)

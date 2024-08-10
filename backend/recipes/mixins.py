@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Favorite, ShoppingCart
+from recipes.models import Favorite, ShoppingCart
 
 
 class RecipeStatusMixin(serializers.Serializer):
@@ -9,7 +9,7 @@ class RecipeStatusMixin(serializers.Serializer):
     """
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
-    
+
     def get_is_favorited(self, obj):
         user = self.context['request'].user
         return user.is_authenticated and Favorite.objects.filter(

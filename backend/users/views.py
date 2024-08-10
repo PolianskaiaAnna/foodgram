@@ -2,7 +2,6 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets, mixins
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -74,17 +73,21 @@ class SubscribeUserView(APIView):
         return Response(
             serialized_following.data, status=status.HTTP_201_CREATED
         )
-    
+
     def delete(self, request, id):
         user = request.user
         following = get_object_or_404(User, id=id)
 
-        if not Subscribe.objects.filter(user=user, following=following).exists():
+        if not Subscribe.objects.filter(
+            user=user, following=following
+        ).exists():
             return Response(
                 {"detail": "Этого пользователя нет в подписках"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        subscription = get_object_or_404(Subscribe, user=user, following=following)
+        subscription = get_object_or_404(
+            Subscribe, user=user, following=following
+        )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

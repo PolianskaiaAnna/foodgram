@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -94,6 +95,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+CSV_FILES_DIR = BASE_DIR.parent / 'data'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

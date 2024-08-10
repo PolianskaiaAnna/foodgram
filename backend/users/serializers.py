@@ -7,6 +7,7 @@ from recipes.serializers import Base64ImageField, RecipeSubscribeSerializer
 LENG_EMAIL = 254
 LENG_USER = 150
 
+
 class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField()
 
