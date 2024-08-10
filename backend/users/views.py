@@ -92,8 +92,8 @@ class SubscribeUserView(APIView):
 class SubscribeViewSet(viewsets.ViewSet):
     """Возвращает список пользователей из подписок"""
     permission_classes = [IsAuthenticated]
-    pagination_class = LimitOffsetPagination
-    # pagination_class = CustomLimitOffsetPagination
+    # pagination_class = LimitOffsetPagination
+    # pagination_class = None
 
     # def get_queryset(self):
     #     queryset = Recipe.objects.annotate(count_recipe=Avg('recipes__score'))

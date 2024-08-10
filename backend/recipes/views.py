@@ -1,5 +1,6 @@
 import io
 import shortuuid
+import django_filters
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404, redirect
 from django.http import FileResponse
@@ -14,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
 
+from recipes.filters import RecipeFilterBackend, IngredientFilter, RecipeFilter
 from recipes.models import (
     Recipe, Tag, Ingredient, Favorite, ShoppingCart, IngredientRecipe
 )
@@ -26,29 +28,6 @@ from recipes.serializers import (
     RecipeCreateSerizalizer
 )
 
-class RecipeFilterBackend(filters.BaseFilterBackend):
-    """Фильтрация по избранному и корзине"""
-    def filter_queryset(self, request, queryset, view):
-        user = request.user
-        is_favorited = request.query_params.get('is_favorited')
-        is_in_shopping_cart = request.query_params.get('is_in_shopping_cart')
-
-        if user.is_authenticated:
-            if is_favorited is not None:
-                # queryset = queryset.filter(favorited_by=user)
-                if is_favorited.lower() == 'true':
-                    queryset = queryset.filter(favorited_by__user=user)
-                else:
-                    queryset = queryset.exclude(favorited_by__user=user)
-
-            if is_in_shopping_cart is not None:
-                # queryset = queryset.filter(in_shopping_cart=user)
-                if is_in_shopping_cart.lower() == 'true':
-                    queryset = queryset.filter(in_shopping_cart__user=user)
-                else:
-                    queryset = queryset.exclude(in_shopping_cart__user=user)
-        return queryset
-
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
@@ -56,13 +35,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
     serializer_class = RecipeReadSerializer
     # permission_classes = [IsAuthorOrAdmin]
     filter_backends = (DjangoFilterBackend, RecipeFilterBackend)
-    filterset_fields = ('author', 'tags')
+    filterset_class = RecipeFilter
+    # filterset_fields = ('author', 'tags')
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             self.permission_classes = [IsAuthenticated, IsAuthorOrAdmin]
         else:
-            self.permission_classes = [IsAuthorOrAdmin]
+            self.permission_classes = [IsAuthenticatedOrReadOnly]
         return super().get_permissions()
 
     def get_serializer_class(self):
@@ -82,7 +62,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(data=request.data, partial=partial)
         if serializer.is_valid():
             self.perform_update(serializer)
             read_serializer = RecipeReadSerializer(
@@ -111,13 +93,16 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     pagination_class = None
     http_method_names = ["get",]
+    # filter_backends = (DjangoFilterBackend)
+    # filterset_fields = ('name')
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Ingredient """
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    filter_backends = (filters.SearchFilter,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter,)
+    filterset_class = IngredientFilter
     search_fields = ('^name',)
     pagination_class = None
     http_method_names = ["get",]
