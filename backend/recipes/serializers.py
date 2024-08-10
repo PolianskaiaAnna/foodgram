@@ -9,6 +9,7 @@ from recipes.models import (
     IngredientRecipe
 )
 from recipes.mixins import RecipeStatusMixin
+from recipes.validators import validation_cooking_time
 from users.models import User, Subscribe
 
 
@@ -83,7 +84,7 @@ class RecipeReadSerializer(RecipeStatusMixin, serializers.ModelSerializer):
     ingredients = IngredientRecipeSerializer(
         source='ingredientrecipe_set', many=True
     )
-    tags = TagSerializer(many=True, read_only=True)    
+    tags = TagSerializer(many=True, read_only=True)
     author = AuthorSerializer(read_only=True)
 
     class Meta:
@@ -100,15 +101,26 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = IngredientRecipeSerializer(
         many=True, write_only=True,
-        label='Ингредиенты'
+        label='Ингредиенты',
+        required=True
     )
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True,
-        write_only=True, label='Теги'
+        write_only=True, label='Теги',
+        required=True
     )
     image = Base64ImageField(
         label='Изображение',
-        required=False, allow_null=True
+        required=True,
+    )
+    name = serializers.CharField(
+        max_length=256,
+        required=True
+        )
+    text = serializers.CharField(required=True)
+    cooking_time = serializers.IntegerField(
+        required=True,
+        validators=(validation_cooking_time,)
     )
 
     class Meta:
@@ -122,16 +134,24 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
     def validate(self, data):
         """
         Проверка на отсутствие повторяющихся тегов
-        и ингредиентов
+        и ингредиентов, их нулевое количество
         """
         tags = data.get('tags')
+        if len(tags) < 1:
+            raise serializers.ValidationError("У рецепта должен быть хотя бы один тег")
         if len(tags) != len(set(tags)):
             raise serializers.ValidationError("Теги не могут использоваться повторно")
-        
+
         ingredients = data.get('ingredients')
         ingredient_list = [ingredient['ingredient'].id for ingredient in ingredients]
+        if len(ingredient_list) < 1:
+            raise serializers.ValidationError("У рецепта должен быть хотя бы один ингредиент")
         if len(ingredient_list) != len(set(ingredient_list)):
             raise serializers.ValidationError("Ингредиенты не могут использоваться повторно")        
+    
+        for ingredient_data in ingredients:
+            if ingredient_data.get('amount') <= 0:
+                raise serializers.ValidationError("Количество ингредиента должно быть больше 0")
         return data
 
     def create(self, validated_data):

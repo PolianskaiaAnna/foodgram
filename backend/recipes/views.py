@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.http import FileResponse
 from django.views import View
 from rest_framework import filters, status, viewsets
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -53,9 +54,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthorOrAdmin]
+    # permission_classes = [IsAuthorOrAdmin]
     filter_backends = (DjangoFilterBackend, RecipeFilterBackend)
     filterset_fields = ('author', 'tags')
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            self.permission_classes = [IsAuthenticated, IsAuthorOrAdmin]
+        else:
+            self.permission_classes = [IsAuthorOrAdmin]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -75,13 +83,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid()
-        self.perform_update(serializer)
-        read_serializer = RecipeReadSerializer(
-            instance=serializer.instance,
-            context={'request': request}
-        )
-        return Response(read_serializer.data, status=status.HTTP_200_OK)
+        if serializer.is_valid():
+            self.perform_update(serializer)
+            read_serializer = RecipeReadSerializer(
+                instance=serializer.instance,
+                context={'request': request}
+            )
+            return Response(read_serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
     @action(detail=True, methods=['get'], url_path='get-link')
@@ -97,62 +106,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 
 class TagViewSet(viewsets.ModelViewSet):
-    """Класс, описывающий запросы к модели Tag """
+    """Класс, описывающий запросы к модели Tag """    
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
-
-    def create(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().partial_update(request, *args, **kwargs)
-    
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().destroy(request, *args, **kwargs)
-    
+    http_method_names = ["get",]
 
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Ingredient """
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    # permission_classes = [IsAdminOrReadOnly]
     filter_backends = (filters.SearchFilter,)
     search_fields = ('^name',)
     pagination_class = None
-
-    
-    def create(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().create(request, *args, **kwargs)
-
-    def update(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().update(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().partial_update(request, *args, **kwargs)
-    
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.is_staff:
-            return Response({"detail": "Method not allowed."}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
-        return super().destroy(request, *args, **kwargs)
+    http_method_names = ["get",]
 
 
 class FavoriteViewSet(APIView):
@@ -183,6 +151,11 @@ class FavoriteViewSet(APIView):
         user = request.user
         recipe_id = kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
+        if not Favorite.objects.filter(user=user, recipe=recipe).exists():
+            return Response(
+                {"detail": "Этого рецепта нет в избранном"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         favorite = get_object_or_404(Favorite, user=user, recipe=recipe)
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -204,13 +177,13 @@ class ShoppingCartViewSet(ViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        favorite = ShoppingCart.objects.create(user=user, recipe=recipe)
+        shopping_cart = ShoppingCart.objects.create(user=user, recipe=recipe)
 
-        serialized_favorited = ShoppingCartSerializer(
-            favorite, context={'request': request}
+        serialized_shopping_cart = ShoppingCartSerializer(
+            shopping_cart, context={'request': request}
         )
         return Response(
-            serialized_favorited.data,
+            serialized_shopping_cart.data,
             status=status.HTTP_201_CREATED
         )
 
@@ -220,8 +193,13 @@ class ShoppingCartViewSet(ViewSet):
         user = request.user
         recipe_id = kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        favorite = get_object_or_404(ShoppingCart, user=user, recipe=recipe)
-        favorite.delete()
+        if not ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
+            return Response(
+                {"detail": "Этого рецепта нет в списке покупок"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        shopping_cart = get_object_or_404(ShoppingCart, user=user, recipe=recipe)
+        shopping_cart.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])

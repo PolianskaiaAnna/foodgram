@@ -46,7 +46,7 @@ class AvatarView(APIView):
 
 
 class SubscribeUserView(APIView):
-    """Создает подписку на пользователя"""
+    """Создает и удаляет подписку на пользователя"""
     permission_classes = [IsAuthenticated]
 
     def post(self, request, id):
@@ -74,6 +74,19 @@ class SubscribeUserView(APIView):
         return Response(
             serialized_following.data, status=status.HTTP_201_CREATED
         )
+    
+    def delete(self, request, id):
+        user = request.user
+        following = get_object_or_404(User, id=id)
+
+        if not Subscribe.objects.filter(user=user, following=following).exists():
+            return Response(
+                {"detail": "Этого пользователя нет в подписках"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        subscription = get_object_or_404(Subscribe, user=user, following=following)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SubscribeViewSet(viewsets.ViewSet):
