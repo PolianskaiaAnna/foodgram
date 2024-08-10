@@ -51,3 +51,10 @@ class Subscribe(models.Model):
         verbose_name='Подписки',
         related_name='followers'
     )
+
+    class Meta:
+        verbose_name = 'Подписки'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return self.user
