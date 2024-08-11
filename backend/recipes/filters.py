@@ -1,5 +1,6 @@
 import django_filters
 from rest_framework import filters
+from django.db.models import Q
 
 from recipes.models import Ingredient, Recipe, Tag
 
@@ -13,14 +14,12 @@ class RecipeFilterBackend(filters.BaseFilterBackend):
 
         if user.is_authenticated:
             if is_favorited is not None:
-                # queryset = queryset.filter(favorited_by=user)
                 if is_favorited.lower() in ['true', '1']:
                     queryset = queryset.filter(favorited_by__user=user)
                 elif is_favorited.lower() in ['false', '0']:
                     queryset = queryset.exclude(favorited_by__user=user)
 
             if is_in_shopping_cart is not None:
-                # queryset = queryset.filter(in_shopping_cart=user)
                 if is_in_shopping_cart.lower() in ['true', '1']:
                     queryset = queryset.filter(in_shopping_cart__user=user)
                 elif is_in_shopping_cart.lower() in ['false', '0']:
@@ -42,13 +41,16 @@ class IngredientFilter(django_filters.FilterSet):
 
 class RecipeFilter(django_filters.FilterSet):
     """Фильтрация по нескольким тегам"""
-    tags = django_filters.ModelMultipleChoiceFilter(
-        queryset=Tag.objects.all(),
-        field_name='tags__slug',
-        to_field_name='slug',
-        lookup_expr='in'
-    )
+   
+    author = django_filters.NumberFilter(field_name='author__id')
+
+    tags = django_filters.CharFilter(method='filter_to_tag')
+
+    def filter_to_tag(self, queryset, name, value):
+        tags = self.request.query_params.getlist('tags')  
+        return queryset.filter(Q(tags__slug__in=tags))
+ 
 
     class Meta:
         model = Recipe
-        fields = ['tags']
+        fields = ['tags', 'author']

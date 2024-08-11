@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.pagination import LimitOffsetPagination
 from djoser.serializers import SetPasswordSerializer
 
 from users.serializers import (
@@ -95,12 +96,8 @@ class SubscribeUserView(APIView):
 class SubscribeViewSet(viewsets.ViewSet):
     """Возвращает список пользователей из подписок"""
     permission_classes = [IsAuthenticated]
-    # pagination_class = LimitOffsetPagination
-    # pagination_class = None
-
-    # def get_queryset(self):
-    #     queryset = Recipe.objects.annotate(count_recipe=Avg('recipes__score'))
-    #     return queryset
+    pagination_class = LimitOffsetPagination
+    # pagination_class = None   
 
     def list(self, request):
         user = request.user
@@ -108,16 +105,19 @@ class SubscribeViewSet(viewsets.ViewSet):
         followed_users = [
             follow.following for follow in follows
         ]
-        # paginator = self.pagination_class()
-        # page = paginator.paginate_queryset(followed_users, request)
+        paginator = self.pagination_class()
+        paginated_users = paginator.paginate_queryset(followed_users, request)
 
-        # if page is not None:
-        #     serializer = SubscriptionSerializer(page, many=True, context={'request': request})
-        #     return paginator.get_paginated_response(serializer.data)
         serializer = SubscriptionSerializer(
-            followed_users, many=True, context={'request': request}
+            paginated_users, many=True, context={'request': request}
         )
-        return Response(serializer.data)
+        return paginator.get_paginated_response(serializer.data)
+
+        
+        # serializer = SubscriptionSerializer(
+        #     followed_users, many=True, context={'request': request}
+        # )
+        # return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):

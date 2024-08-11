@@ -64,8 +64,16 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
         instance = self.get_object()
-        serializer = self.get_serializer(data=request.data, partial=partial)
+        if not instance:
+            return Response(
+                {"detail": "Рецепт не найден"},
+                status=status.HTTP_404_NOT_FOUND
+        )
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         if serializer.is_valid():
+        #     self.perform_update(serializer)
+        #     return Response(serializer.data, status=status.HTTP_200_OK)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             self.perform_update(serializer)
             read_serializer = RecipeReadSerializer(
                 instance=serializer.instance,
@@ -93,9 +101,7 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
     pagination_class = None
     http_method_names = ["get",]
-    # filter_backends = (DjangoFilterBackend)
-    # filterset_fields = ('name')
-
+    
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Ingredient """

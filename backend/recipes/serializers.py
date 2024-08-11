@@ -135,17 +135,19 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
         """
         Проверка на отсутствие повторяющихся тегов
         и ингредиентов, их нулевое количество
-        """
-        tags = data.get('tags')
-        if len(tags) < 1:
-            raise serializers.ValidationError("У рецепта должен быть хотя бы один тег")
+        """        
+        tags = data.get('tags', [])
+        if not tags:
+            raise serializers.ValidationError("Теги обязательны для заполнения.")
         if len(tags) != len(set(tags)):
             raise serializers.ValidationError("Теги не могут использоваться повторно")
 
-        ingredients = data.get('ingredients')
+        ingredients = data.get('ingredients', [])
         ingredient_list = [ingredient['ingredient'].id for ingredient in ingredients]
-        if len(ingredient_list) < 1:
-            raise serializers.ValidationError("У рецепта должен быть хотя бы один ингредиент")
+        if not ingredients:
+            raise serializers.ValidationError("Ингредиенты обязательны для заполнения.")
+        # if len(ingredient_list) < 1:
+        #     raise serializers.ValidationError("У рецепта должен быть хотя бы один ингредиент")
         if len(ingredient_list) != len(set(ingredient_list)):
             raise serializers.ValidationError("Ингредиенты не могут использоваться повторно")        
     
@@ -157,6 +159,9 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
+        
+        if not ingredients_data or not tags_data:
+            raise serializers.ValidationError("Поля `ingredients` и `tags` обязательны для заполнения!")
 
         recipe = Recipe.objects.create(**validated_data)
         # Создание короткой ссылки
