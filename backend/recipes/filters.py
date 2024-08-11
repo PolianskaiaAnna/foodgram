@@ -1,8 +1,8 @@
 import django_filters
-from rest_framework import filters
 from django.db.models import Q
+from rest_framework import filters
 
-from recipes.models import Ingredient, Recipe, Tag
+from recipes.models import Ingredient, Recipe
 
 
 class RecipeFilterBackend(filters.BaseFilterBackend):
@@ -41,15 +41,12 @@ class IngredientFilter(django_filters.FilterSet):
 
 class RecipeFilter(django_filters.FilterSet):
     """Фильтрация по нескольким тегам"""
-   
     author = django_filters.NumberFilter(field_name='author__id')
-
     tags = django_filters.CharFilter(method='filter_to_tag')
 
     def filter_to_tag(self, queryset, name, value):
-        tags = self.request.query_params.getlist('tags')  
+        tags = self.request.query_params.getlist('tags')
         return queryset.filter(Q(tags__slug__in=tags))
- 
 
     class Meta:
         model = Recipe

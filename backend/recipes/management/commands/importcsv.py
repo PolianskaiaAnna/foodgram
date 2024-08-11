@@ -26,9 +26,6 @@ class Command(BaseCommand):
                 objects_to_create,
                 ignore_conflicts=True
             )
-            # self.stdout.write(
-            #     f'Данные из файла {file} импортированы')
-
         self.stdout.write(self.style.SUCCESS(
             'Все данные загружены в базу')
         )

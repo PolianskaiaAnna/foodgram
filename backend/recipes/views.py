@@ -1,12 +1,11 @@
 import io
 import shortuuid
-import django_filters
+
 from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404, redirect
-from django.http import FileResponse
 from django.views import View
+from django.http import FileResponse
 from rest_framework import filters, status, viewsets
-from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly, IsAuthenticated
@@ -19,7 +18,7 @@ from recipes.filters import RecipeFilterBackend, IngredientFilter, RecipeFilter
 from recipes.models import (
     Recipe, Tag, Ingredient, Favorite, ShoppingCart, IngredientRecipe
 )
-from recipes.permissions import IsAuthorOrAdmin, IsAdminOrReadOnly
+from recipes.permissions import IsAuthorOrAdmin
 from recipes.serializers import (
     TagSerializer,
     IngredientSerializer,
@@ -33,10 +32,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
     queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
-    # permission_classes = [IsAuthorOrAdmin]
     filter_backends = (DjangoFilterBackend, RecipeFilterBackend)
     filterset_class = RecipeFilter
-    # filterset_fields = ('author', 'tags')
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -58,7 +55,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 instance=serializer.instance,
                 context={'request': request}
             )
-            return Response(read_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(
+                read_serializer.data, status=status.HTTP_201_CREATED
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def update(self, request, *args, **kwargs):
@@ -68,12 +67,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(
                 {"detail": "Рецепт не найден"},
                 status=status.HTTP_404_NOT_FOUND
+            )
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
         )
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
         if serializer.is_valid():
-        #     self.perform_update(serializer)
-        #     return Response(serializer.data, status=status.HTTP_200_OK)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
             self.perform_update(serializer)
             read_serializer = RecipeReadSerializer(
                 instance=serializer.instance,
@@ -81,10 +79,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
             return Response(read_serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 
     @action(detail=True, methods=['get'], url_path='get-link')
-    def get_short_link(self, request, pk=None):        
+    def get_short_link(self, request, pk=None):
         recipe = self.get_object()
         if not recipe.short_link:
             recipe.short_link = shortuuid.uuid()
@@ -92,16 +89,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
         # Заменить на адрес сайта!
         short_link_url = f"127.0.0.1:8000/s/{recipe.short_link}"
-        return Response({'short-link': short_link_url}, status=status.HTTP_200_OK)
+        return Response(
+            {'short-link': short_link_url}, status=status.HTTP_200_OK
+        )
 
 
 class TagViewSet(viewsets.ModelViewSet):
-    """Класс, описывающий запросы к модели Tag """    
+    """Класс, описывающий запросы к модели Tag """
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
     http_method_names = ["get",]
-    
+
 
 class IngredientViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Ingredient """
@@ -189,12 +188,15 @@ class ShoppingCartViewSet(ViewSet):
                 {"detail": "Этого рецепта нет в списке покупок"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        shopping_cart = get_object_or_404(ShoppingCart, user=user, recipe=recipe)
+        shopping_cart = get_object_or_404(
+            ShoppingCart, user=user, recipe=recipe
+        )
         shopping_cart.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
+        """Создание файла со списком покупок"""
         user = request.user
         shopping_lists = ShoppingCart.objects.filter(user=user)
         ingredients = {}
@@ -229,7 +231,7 @@ class ShoppingCartViewSet(ViewSet):
         for name, amount in ingredients.items():
             content += f"{name} — {amount}\n"
         return content.encode('utf-8')
-    
+
 
 class DecodeView(View):
     """Функция открывает рецепт по переданной короткой ссылке"""

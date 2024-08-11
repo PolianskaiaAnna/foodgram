@@ -7,10 +7,6 @@ from users.views import (
 
 router_vers1 = DefaultRouter()
 router_vers1.register('users', UserViewSet, basename='users')
-# router_vers1.register(
-#     r'recipes/(?P<recipe_id>\d+)/favorite',
-#     FavoriteViewSet, basename='favorites'
-# )
 
 urlpatterns = [
     path('auth/', include('djoser.urls')),

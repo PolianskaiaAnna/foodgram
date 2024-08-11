@@ -43,6 +43,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientRecipeSerializer(serializers.ModelSerializer):
     """Сериализатор для связи между рецептом и ингредиентом."""
+
     id = serializers.PrimaryKeyRelatedField(
         source='ingredient',
         queryset=Ingredient.objects.all()
@@ -70,7 +71,7 @@ class AuthorSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        "Проверка подписки"
+        """Проверка подписки"""
         request = self.context.get('request')
         if request and request.user.is_authenticated:
             return Subscribe.objects.filter(
@@ -116,7 +117,7 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
     name = serializers.CharField(
         max_length=256,
         required=True
-        )
+    )
     text = serializers.CharField(required=True)
     cooking_time = serializers.IntegerField(
         required=True,
@@ -135,33 +136,45 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
         """
         Проверка на отсутствие повторяющихся тегов
         и ингредиентов, их нулевое количество
-        """        
+        """
         tags = data.get('tags', [])
         if not tags:
-            raise serializers.ValidationError("Теги обязательны для заполнения.")
+            raise serializers.ValidationError(
+                "Теги обязательны для заполнения."
+            )
         if len(tags) != len(set(tags)):
-            raise serializers.ValidationError("Теги не могут использоваться повторно")
+            raise serializers.ValidationError(
+                "Теги не могут использоваться повторно"
+            )
 
         ingredients = data.get('ingredients', [])
-        ingredient_list = [ingredient['ingredient'].id for ingredient in ingredients]
+        ingredient_list = [
+            ingredient['ingredient'].id for ingredient in ingredients
+        ]
         if not ingredients:
-            raise serializers.ValidationError("Ингредиенты обязательны для заполнения.")
-        # if len(ingredient_list) < 1:
-        #     raise serializers.ValidationError("У рецепта должен быть хотя бы один ингредиент")
+            raise serializers.ValidationError(
+                "Ингредиенты обязательны для заполнения."
+            )
         if len(ingredient_list) != len(set(ingredient_list)):
-            raise serializers.ValidationError("Ингредиенты не могут использоваться повторно")        
-    
+            raise serializers.ValidationError(
+                "Ингредиенты не могут использоваться повторно"
+            )
+
         for ingredient_data in ingredients:
             if ingredient_data.get('amount') <= 0:
-                raise serializers.ValidationError("Количество ингредиента должно быть больше 0")
+                raise serializers.ValidationError(
+                    "Количество ингредиента должно быть больше 0"
+                )
         return data
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
-        
+
         if not ingredients_data or not tags_data:
-            raise serializers.ValidationError("Поля `ingredients` и `tags` обязательны для заполнения!")
+            raise serializers.ValidationError(
+                "Поля `ingredients` и `tags` обязательны для заполнения!"
+            )
 
         recipe = Recipe.objects.create(**validated_data)
         # Создание короткой ссылки
@@ -218,7 +231,11 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
 
 
 class RecipeSubscribeSerializer(serializers.ModelSerializer):
-    """Сериализатор для отображения рецепта из подписок, избранного, списка покупок"""
+    """
+    Сериализатор для отображения рецепта из подписок,
+    избранного, списка покупок
+    """
+
     class Meta:
         model = Recipe
         fields = (
@@ -228,7 +245,7 @@ class RecipeSubscribeSerializer(serializers.ModelSerializer):
 
 
 class FavoriteSerializer(serializers.ModelSerializer):
-    # """Сериализатор для избранного"""
+    """Сериализатор для избранного"""
     id = serializers.IntegerField(source='recipe.id')
     name = serializers.CharField(source='recipe.name')
     image = serializers.CharField(source='recipe.image')

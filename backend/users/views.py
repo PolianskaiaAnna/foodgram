@@ -2,10 +2,10 @@ from django.db.models import Count
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets, mixins
 from rest_framework.decorators import action
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.pagination import LimitOffsetPagination
 from djoser.serializers import SetPasswordSerializer
 
 from users.serializers import (
@@ -97,7 +97,6 @@ class SubscribeViewSet(viewsets.ViewSet):
     """Возвращает список пользователей из подписок"""
     permission_classes = [IsAuthenticated]
     pagination_class = LimitOffsetPagination
-    # pagination_class = None   
 
     def list(self, request):
         user = request.user
@@ -112,12 +111,6 @@ class SubscribeViewSet(viewsets.ViewSet):
             paginated_users, many=True, context={'request': request}
         )
         return paginator.get_paginated_response(serializer.data)
-
-        
-        # serializer = SubscriptionSerializer(
-        #     followed_users, many=True, context={'request': request}
-        # )
-        # return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):
