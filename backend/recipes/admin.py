@@ -28,7 +28,7 @@ class IngredientAdmin(admin.ModelAdmin):
         'name',
         'measurement_unit'
     )
-    
+
     search_fields = ('name',)
 
 

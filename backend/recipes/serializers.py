@@ -12,6 +12,8 @@ from recipes.mixins import RecipeStatusMixin
 from recipes.validators import validation_cooking_time
 from users.models import User, Subscribe
 
+LENG_NAME = 256
+
 
 class Base64ImageField(serializers.ImageField):
     """Сериализатор для обработки изображений, закодированных в Base64"""
@@ -115,7 +117,7 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
         required=True,
     )
     name = serializers.CharField(
-        max_length=256,
+        max_length=LENG_NAME,
         required=True
     )
     text = serializers.CharField(required=True)

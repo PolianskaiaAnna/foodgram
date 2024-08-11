@@ -1,5 +1,4 @@
 import csv
-from pathlib import Path
 
 from django.core.management.base import BaseCommand
 from django.conf import settings
@@ -21,7 +20,9 @@ class Command(BaseCommand):
             for row in reader:
                 counter += 1
                 name, measurement_unit = row
-                objects_to_create.append(model(name=name, measurement_unit=measurement_unit))
+                objects_to_create.append(model(
+                    name=name, measurement_unit=measurement_unit
+                ))
             model.objects.bulk_create(
                 objects_to_create,
                 ignore_conflicts=True

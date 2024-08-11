@@ -128,8 +128,6 @@ class SubscriptionSerializer(serializers.ModelSerializer):
         return obj.recipes.count()
 
     def get_recipes(self, obj):
-        # recipes = obj.recipes.all()
-        # return RecipeReadSerializer(recipes, many=True).data
         recipes_limit = self.context['request'].query_params.get(
             'recipes_limit'
         )

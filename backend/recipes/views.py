@@ -1,10 +1,9 @@
-import io
 import shortuuid
 
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
-from django.http import FileResponse
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (
@@ -207,30 +206,31 @@ class ShoppingCartViewSet(ViewSet):
                 recipe=recipe
             ):
                 ingredient_name = ingredient_recipe.ingredient.name
+                ingredient_unit = ingredient_recipe.ingredient.measurement_unit
                 ingredient_amount = ingredient_recipe.amount
                 if ingredient_name in ingredients:
-                    ingredients[ingredient_name] += ingredient_amount
+                    ingredients[ingredient_name]['amount'] += ingredient_amount
                 else:
-                    ingredients[ingredient_name] = ingredient_amount
+                    ingredients[ingredient_name] = {
+                        'amount': ingredient_amount,
+                        'measurement_unit': ingredient_unit
+                    }
 
         file_content = self.generate_txt(ingredients)
-        content_type = 'text/plain'
-        extension = 'txt'
-
-        response = FileResponse(
-            io.BytesIO(file_content),
-            content_type=content_type
+        response = HttpResponse(file_content, content_type='text/plain')
+        response['Content-Disposition'] = (
+            'attachment; filename="shopping_cart.txt"'
         )
-        response[
-            'Content-Disposition'
-        ] = f'attachment; filename="shopping_cart.{extension}"'
         return response
 
     def generate_txt(self, ingredients):
-        content = ""
-        for name, amount in ingredients.items():
-            content += f"{name} — {amount}\n"
-        return content.encode('utf-8')
+        lines = []
+        for ingredient, details in ingredients.items():
+            lines.append(
+                f"{ingredient}: {details['amount']} "
+                f"{details['measurement_unit']}"
+            )
+        return "\n".join(lines)
 
 
 class DecodeView(View):
