@@ -11,6 +11,9 @@ LENG_USER = 150
 class User(AbstractUser):
     """Класс, описывающий кастомную модель пользователя"""
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
     username = models.CharField(
         'Имя пользователя',
         max_length=LENG_USER,
@@ -28,7 +31,7 @@ class User(AbstractUser):
     )
     avatar = models.ImageField(
         upload_to='static/avatars/',
-        null=True, blank=True
+        null=True
     )
 
     class Meta:

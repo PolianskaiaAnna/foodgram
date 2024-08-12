@@ -86,7 +86,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.short_link = shortuuid.uuid()
             recipe.save()
 
-        # Заменить на адрес сайта!
+        # TODO: Заменить на адрес сайта!
         short_link_url = f"127.0.0.1:8000/s/{recipe.short_link}"
         return Response(
             {'short-link': short_link_url}, status=status.HTTP_200_OK
@@ -195,42 +195,9 @@ class ShoppingCartViewSet(ViewSet):
 
     @action(detail=False, methods=['get'])
     def download_shopping_cart(self, request):
-        """Создание файла со списком покупок"""
+        """Получение файла со списком покупок"""
         user = request.user
-        shopping_lists = ShoppingCart.objects.filter(user=user)
-        ingredients = {}
-
-        for shopping_list in shopping_lists:
-            recipe = shopping_list.recipe
-            for ingredient_recipe in IngredientRecipe.objects.filter(
-                recipe=recipe
-            ):
-                ingredient_name = ingredient_recipe.ingredient.name
-                ingredient_unit = ingredient_recipe.ingredient.measurement_unit
-                ingredient_amount = ingredient_recipe.amount
-                if ingredient_name in ingredients:
-                    ingredients[ingredient_name]['amount'] += ingredient_amount
-                else:
-                    ingredients[ingredient_name] = {
-                        'amount': ingredient_amount,
-                        'measurement_unit': ingredient_unit
-                    }
-
-        file_content = self.generate_txt(ingredients)
-        response = HttpResponse(file_content, content_type='text/plain')
-        response['Content-Disposition'] = (
-            'attachment; filename="shopping_cart.txt"'
-        )
-        return response
-
-    def generate_txt(self, ingredients):
-        lines = []
-        for ingredient, details in ingredients.items():
-            lines.append(
-                f"{ingredient}: {details['amount']} "
-                f"{details['measurement_unit']}"
-            )
-        return "\n".join(lines)
+        return download_shopping_cart(user)
 
 
 class DecodeView(View):
@@ -238,3 +205,42 @@ class DecodeView(View):
     def get(self, request, short_link, *args, **kwargs):
         recipe = get_object_or_404(Recipe, short_link=short_link)
         return redirect('recipe-detail', pk=recipe.pk)
+
+
+def download_shopping_cart(user):
+    """Создание файла со списком покупок"""
+    shopping_lists = ShoppingCart.objects.filter(user=user)
+    ingredients = {}
+
+    for shopping_list in shopping_lists:
+        recipe = shopping_list.recipe
+        for ingredient_recipe in IngredientRecipe.objects.filter(
+            recipe=recipe
+        ):
+            ingredient_name = ingredient_recipe.ingredient.name
+            ingredient_unit = ingredient_recipe.ingredient.measurement_unit
+            ingredient_amount = ingredient_recipe.amount
+            if ingredient_name in ingredients:
+                ingredients[ingredient_name]['amount'] += ingredient_amount
+            else:
+                ingredients[ingredient_name] = {
+                    'amount': ingredient_amount,
+                    'measurement_unit': ingredient_unit
+                }
+
+    file_content = generate_txt(ingredients)
+    response = HttpResponse(file_content, content_type='text/plain')
+    response['Content-Disposition'] = (
+        'attachment; filename="shopping_cart.txt"'
+    )
+    return response
+
+
+def generate_txt(ingredients):
+    lines = []
+    for ingredient, details in ingredients.items():
+        lines.append(
+            f"{ingredient}: {details['amount']} "
+            f"{details['measurement_unit']}"
+        )
+    return "\n".join(lines)

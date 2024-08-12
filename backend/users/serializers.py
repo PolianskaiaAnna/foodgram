@@ -1,11 +1,8 @@
 from rest_framework import serializers
 
 from users.validators import username_validator, username_not_me
-from users.models import User, Subscribe
+from users.models import User, Subscribe, LENG_EMAIL, LENG_USER
 from recipes.serializers import Base64ImageField, RecipeSubscribeSerializer
-
-LENG_EMAIL = 254
-LENG_USER = 150
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -65,8 +62,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         Функция проверяет, что связка юзернейм-email уникальна"""
         email = data.get('email')
         username = data.get('username')
-        if username.lower() == 'me':
-            raise serializers.ValidationError('Нельзя использовать имя me')
 
         user_with_email = User.objects.filter(email=email).first()
         # Проверка на то, что нельзя использовать email,
@@ -143,12 +138,12 @@ class SubscribeSerializer(serializers.ModelSerializer):
     """
     Класс, описывающий сериализатор для модели подписки на других пользователей
     """
-    user = serializers.SlugRelatedField(
-        read_only=True, slug_field='username',
+    user = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all(),
         default=serializers.CurrentUserDefault()
     )
-    following = serializers.SlugRelatedField(
-        queryset=User.objects.all(), slug_field='username'
+    following = serializers.PrimaryKeyRelatedField(
+        queryset=User.objects.all()
     )
 
     class Meta:
@@ -168,3 +163,7 @@ class SubscribeSerializer(serializers.ModelSerializer):
                 "Вы уже подписаны на этого пользователя."
             )
         return data
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return Subscribe.objects.create(**validated_data)

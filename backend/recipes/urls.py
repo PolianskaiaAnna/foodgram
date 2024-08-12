@@ -3,7 +3,7 @@ from rest_framework import routers
 
 from recipes.views import (
     RecipeViewSet, TagViewSet,
-    IngredientViewSet, FavoriteViewSet, ShoppingCartViewSet
+    IngredientViewSet, FavoriteViewSet, ShoppingCartViewSet,
 )
 
 router_vers1 = routers.DefaultRouter()

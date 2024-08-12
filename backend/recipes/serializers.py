@@ -175,7 +175,7 @@ class RecipeCreateSerizalizer(RecipeStatusMixin, serializers.ModelSerializer):
 
         if not ingredients_data or not tags_data:
             raise serializers.ValidationError(
-                "Поля `ingredients` и `tags` обязательны для заполнения!"
+                "Поля Ингридиентов и Тегов обязательны для заполнения!"
             )
 
         recipe = Recipe.objects.create(**validated_data)

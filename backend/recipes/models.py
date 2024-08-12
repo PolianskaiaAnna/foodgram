@@ -3,19 +3,28 @@ from django.db import models
 from recipes.validators import validation_cooking_time
 from users.models import User
 
+LENG_NAME = 200
+LENG_UNIT = 100
+
 
 class Ingredient(models.Model):
     """Модель ингредиентов"""
     name = models.CharField(
-        max_length=200,
+        max_length=LENG_NAME,
         verbose_name='Название', unique=True
     )
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=100
+        max_length=LENG_UNIT
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient'
+            )
+        ]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
         ordering = ('name',)
@@ -27,7 +36,7 @@ class Ingredient(models.Model):
 class Tag(models.Model):
     """Модель тега"""
     name = models.CharField(verbose_name='Название', max_length=100)
-    slug = models.SlugField()
+    slug = models.SlugField(verbose_name='Слаг')
 
     class Meta:
         verbose_name = 'Тег'
@@ -68,7 +77,7 @@ class Recipe(models.Model):
         related_name='recipes',
     )
     short_link = models.CharField(
-        max_length=22, unique=True, blank=True, null=True
+        max_length=22, unique=True, null=True
     )
 
     class Meta:
@@ -97,7 +106,7 @@ class IngredientRecipe(models.Model):
     """Модель связи между рецептом и тэгом"""
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
     ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-    amount = models.PositiveIntegerField()
+    amount = models.PositiveIntegerField(verbose_name='Количество')
 
     def __str__(self):
         return f'{self.recipe} {self.ingredient}'

@@ -1,5 +1,4 @@
 import django_filters
-from django.db.models import Q
 from rest_framework import filters
 
 from recipes.models import Ingredient, Recipe
@@ -46,7 +45,7 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_to_tag(self, queryset, name, value):
         tags = self.request.query_params.getlist('tags')
-        return queryset.filter(Q(tags__slug__in=tags))
+        return queryset.filter(tags__slug__in=tags)
 
     class Meta:
         model = Recipe

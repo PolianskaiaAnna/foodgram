@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from users.serializers import (
     AvatarSerializer,
     UserSerializer, UserCreateSerializer,
-    SubscriptionSerializer
+    SubscriptionSerializer, SubscribeSerializer
 )
 from users.models import User, Subscribe
 
@@ -53,27 +53,24 @@ class SubscribeUserView(APIView):
         user = request.user
         following = get_object_or_404(User, id=id)
 
-        if user == following:
-            return Response(
-                {"detail": "Нельзя подписаться на себя."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        data = {
+            'user': user.id,
+            'following': following.id
+        }
 
-        if Subscribe.objects.filter(
-            user=user, following=following
-        ).exists():
-            return Response(
-                {"detail": "Вы уже подписаны на этого пользователя."},
-                status=status.HTTP_400_BAD_REQUEST
+        serializer = SubscribeSerializer(
+            data=data,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            serialized_following = SubscriptionSerializer(
+                following, context={'request': request}
             )
-
-        Subscribe.objects.create(user=user, following=following)
-        serialized_following = SubscriptionSerializer(
-            following, context={'request': request}
-        )
-        return Response(
-            serialized_following.data, status=status.HTTP_201_CREATED
-        )
+            return Response(
+                serialized_following.data, status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, id):
         user = request.user
@@ -115,7 +112,6 @@ class SubscribeViewSet(viewsets.ViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     """Обрабатывает запросы к профилю пользователя"""
-    queryset = User.objects.all()
     serializer_class = UserSerializer
 
     def get_serializer_class(self):
