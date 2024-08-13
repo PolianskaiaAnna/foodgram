@@ -15,12 +15,10 @@ class Command(BaseCommand):
         self.stdout.write(f'Начинаем импорт из файла {csv_file_path}')
         with csv_file_path.open(mode='r', encoding='utf8') as f:
             reader = csv.DictReader(f)
-            objects_to_create = []
-            for row in reader:
-                name, measurement_unit = row
-                objects_to_create.append(model(
-                    name=name, measurement_unit=measurement_unit
-                ))
+            objects_to_create = [
+                model(name=name, measurement_unit=measurement_unit)
+                for name, measurement_unit in reader
+            ]
             model.objects.bulk_create(
                 objects_to_create,
                 ignore_conflicts=True
