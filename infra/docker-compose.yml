@@ -4,6 +4,7 @@ volumes:
   pg_data:
   static:
   media:
+  front_static:
 
 services:
   db:
@@ -17,8 +18,8 @@ services:
     build: ../backend
     env_file: .env
     volumes:
-      - static:/backend_static
-      - media:/media
+      - static:/app/static
+      - media:/app/media
     depends_on:
       - db    
 
@@ -27,7 +28,7 @@ services:
     container_name: foodgram-front
     build: ../frontend
     volumes:
-      - ../frontend/:/app/result_build/
+      - front_static:/app/result_build/
   nginx:
     container_name: foodgram-proxy
     image: nginx:1.25.4-alpine
@@ -37,4 +38,6 @@ services:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
+      - static:/static
+      - media:/media
 
