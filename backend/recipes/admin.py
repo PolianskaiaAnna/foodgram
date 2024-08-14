@@ -31,6 +31,11 @@ class IngredientAdmin(admin.ModelAdmin):
 
     search_fields = ('name',)
 
+    @admin.display(description='Добавлен в избранное (раз)')
+    def favorited_count(self, obj):
+        """Показывает сколько раз рецепт был добавлен в избранное."""
+        return obj.favorited_by.count()
+
 
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(Ingredient, IngredientAdmin)

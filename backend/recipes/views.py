@@ -199,7 +199,6 @@ class ShoppingCartViewSet(ViewSet):
         user = request.user
         return download_shopping_cart(user)
 
-
 class DecodeView(View):
     """Функция открывает рецепт по переданной короткой ссылке"""
     def get(self, request, short_link, *args, **kwargs):
