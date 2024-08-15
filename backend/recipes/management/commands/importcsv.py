@@ -14,10 +14,10 @@ class Command(BaseCommand):
         model = Ingredient
         self.stdout.write(f'Начинаем импорт из файла {csv_file_path}')
         with csv_file_path.open(mode='r', encoding='utf8') as f:
-            reader = csv.DictReader(f)
+            reader = csv.reader(f)
             objects_to_create = [
-                model(name=name, measurement_unit=measurement_unit)
-                for name, measurement_unit in reader
+                model(name=row[0], measurement_unit=row[1])
+                for row in reader
             ]
             model.objects.bulk_create(
                 objects_to_create,

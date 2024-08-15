@@ -29,10 +29,13 @@ from recipes.serializers import (
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Класс, описывающий запросы к модели Recipe """
-    queryset = Recipe.objects.all()
     serializer_class = RecipeReadSerializer
     filter_backends = (DjangoFilterBackend, RecipeFilterBackend)
     filterset_class = RecipeFilter
+
+    def get_queryset(self):
+        queryset = Recipe.objects.all()
+        return queryset.distinct()
 
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
@@ -198,6 +201,7 @@ class ShoppingCartViewSet(ViewSet):
         """Получение файла со списком покупок"""
         user = request.user
         return download_shopping_cart(user)
+
 
 class DecodeView(View):
     """Функция открывает рецепт по переданной короткой ссылке"""
