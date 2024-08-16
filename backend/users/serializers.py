@@ -1,8 +1,8 @@
 from rest_framework import serializers
 
-from users.validators import username_validator, username_not_me
-from users.models import User, Subscribe, LENG_EMAIL, LENG_USER
 from recipes.serializers import Base64ImageField, RecipeSubscribeSerializer
+from users.models import LENG_EMAIL, LENG_USER, Subscribe, User
+from users.validators import username_not_me, username_validator
 
 
 class UserSerializer(serializers.ModelSerializer):

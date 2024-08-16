@@ -1,19 +1,17 @@
-from djoser.serializers import SetPasswordSerializer
 from django.db.models import Count
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets, mixins
+from djoser.serializers import SetPasswordSerializer
+from rest_framework import mixins, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from users.serializers import (
-    AvatarSerializer,
-    UserSerializer, UserCreateSerializer,
-    SubscriptionSerializer, SubscribeSerializer
-)
-from users.models import User, Subscribe
+from users.models import Subscribe, User
+from users.serializers import (AvatarSerializer, SubscribeSerializer,
+                               SubscriptionSerializer, UserCreateSerializer,
+                               UserSerializer)
 
 
 class CreateViewSet(viewsets.GenericViewSet,
