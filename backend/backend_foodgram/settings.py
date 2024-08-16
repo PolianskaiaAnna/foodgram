@@ -133,14 +133,29 @@ DJOSER = {
     'USER_ID_FIELD': 'id',
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        # 'activation': 'djoser.serializers.ActivationSerializer',
         'user_create': 'users.serializers.UserCreateSerializer',
         'user': 'users.serializers.UserSerializer',
         'current_user': 'users.serializers.UserSerializer',
-        'user-delete': 'djoser.serializers.UserDeleteSerializer',
-        # 'token': 'djoser.serializers.TokenSerializer',
-        # 'token_create': 'djoser.serializers.TokenCreateSerializer',
+        'user-delete': 'djoser.serializers.UserDeleteSerializer',     
         'set_password': 'djoser.serializers.ChangePasswordSerializer',
 
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.security.csrf': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
