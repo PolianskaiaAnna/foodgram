@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-y=i_c8wl5#4gftfp#hahgyepif)6au$-z6ouwf#@o_6r7r35(*
 
 # SECRET_KEY = os.getenv('SECRET_KEY', default='default_secret_key')
 
-DEBUG = True
+DEBUG = False
 
 
 ALLOWED_HOSTS = ['158.160.93.112', 'foodgram-yp.zapto.org', 'localhost', '127.0.0.1']
@@ -29,6 +29,13 @@ INSTALLED_APPS = [
     'djoser',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://foodgram-yp.zapto.org',
+    'http://foodgram-yp.zapto.org',
+    'https://158.160.93.112', 'http://158.160.93.112',
+    'http://localhost', 'http://127.0.0.1'
 ]
 
 MIDDLEWARE = [
@@ -126,13 +133,13 @@ DJOSER = {
     'USER_ID_FIELD': 'id',
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        'activation': 'djoser.serializers.ActivationSerializer',
+        # 'activation': 'djoser.serializers.ActivationSerializer',
         'user_create': 'users.serializers.UserCreateSerializer',
         'user': 'users.serializers.UserSerializer',
         'current_user': 'users.serializers.UserSerializer',
         'user-delete': 'djoser.serializers.UserDeleteSerializer',
-        'token': 'djoser.serializers.TokenSerializer',
-        'token_create': 'djoser.serializers.TokenCreateSerializer',
+        # 'token': 'djoser.serializers.TokenSerializer',
+        # 'token_create': 'djoser.serializers.TokenCreateSerializer',
         'set_password': 'djoser.serializers.ChangePasswordSerializer',
 
     },
