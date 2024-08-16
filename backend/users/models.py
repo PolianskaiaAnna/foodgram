@@ -1,6 +1,5 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-
 from users.validators import username_not_me, username_validator
 
 LENG_EMAIL = 254

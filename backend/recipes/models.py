@@ -1,5 +1,4 @@
 from django.db import models
-
 from recipes.validators import validation_cooking_time
 from users.models import User
 
