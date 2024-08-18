@@ -17,9 +17,14 @@ class RecipeAdmin(admin.ModelAdmin):
         'text',
         'cooking_time'
     )
-    search_fields = ('name', 'author')
+    search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     filter_horizontal = ('ingredients', 'tags')
+
+    @admin.display(description='Добавлен в избранное (раз)')
+    def favorited_count(self, obj):
+        """Показывает сколько раз рецепт был добавлен в избранное."""
+        return obj.favorited_by.count()
 
 
 class IngredientAdmin(admin.ModelAdmin):
@@ -29,11 +34,6 @@ class IngredientAdmin(admin.ModelAdmin):
     )
 
     search_fields = ('name',)
-
-    @admin.display(description='Добавлен в избранное (раз)')
-    def favorited_count(self, obj):
-        """Показывает сколько раз рецепт был добавлен в избранное."""
-        return obj.favorited_by.count()
 
 
 admin.site.register(Recipe, RecipeAdmin)

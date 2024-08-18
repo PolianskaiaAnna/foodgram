@@ -81,8 +81,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             recipe.short_link = shortuuid.uuid()
             recipe.save()
 
-        # TODO: Заменить на адрес сайта!
-        short_link_url = f"127.0.0.1:8000/s/{recipe.short_link}"
+        short_link_url = f"foodgram-yp.zapto.org/s/{recipe.short_link}"
         return Response(
             {'short-link': short_link_url}, status=status.HTTP_200_OK
         )

@@ -3,16 +3,11 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-y=i_c8wl5#4gftfp#hahgyepif)6au$-z6ouwf#@o_6r7r35(*'
-
-# SECRET_KEY = os.getenv('SECRET_KEY', default='default_secret_key')
+SECRET_KEY = os.getenv('SECRET_KEY', default='default_secret_key')
 
 DEBUG = False
 
-
-ALLOWED_HOSTS = ['158.160.93.112', 'foodgram-yp.zapto.org', 'localhost', '127.0.0.1']
-
-# ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(',')
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -97,7 +92,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ru-RU'
 
 TIME_ZONE = 'UTC'
 
