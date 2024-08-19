@@ -1,6 +1,5 @@
-from rest_framework import serializers
-
 from recipes.models import Favorite, ShoppingCart
+from rest_framework import serializers
 
 
 class RecipeStatusMixin(serializers.Serializer):
