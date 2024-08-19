@@ -1,4 +1,5 @@
 from django.contrib import admin
+
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 
 
@@ -13,13 +14,13 @@ class RecipeAdmin(admin.ModelAdmin):
         'favorited_count'
     )
     list_editable = (
-        'name',
         'text',
         'cooking_time'
     )
     search_fields = ('name', 'author__username')
     list_filter = ('tags',)
     filter_horizontal = ('ingredients', 'tags')
+    list_display_links = ('name',)
 
     @admin.display(description='Добавлен в избранное (раз)')
     def favorited_count(self, obj):

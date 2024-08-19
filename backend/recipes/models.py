@@ -1,4 +1,5 @@
 from django.db import models
+
 from recipes.validators import validation_cooking_time
 from users.models import User
 
@@ -71,12 +72,13 @@ class Recipe(models.Model):
         validators=(validation_cooking_time,)
     )
     author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='recipes',
+        User, on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='recipes'
     )
     short_link = models.CharField(
-        max_length=22, unique=True, null=True
+        max_length=22, unique=True, null=True,
+        verbose_name='Короткая ссылка'
     )
 
     class Meta:
@@ -130,7 +132,7 @@ class Favorite(models.Model):
         verbose_name_plural = 'Избранное'
 
     def __str__(self):
-        return {self.user.username} - {self.recipe.name}
+        return f'{self.user.username} {self.recipe.name}'
 
 
 class ShoppingCart(models.Model):

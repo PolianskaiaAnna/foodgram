@@ -1,6 +1,7 @@
 import django_filters
-from recipes.models import Ingredient, Recipe
 from rest_framework import filters
+
+from recipes.models import Ingredient, Recipe
 
 
 class RecipeFilterBackend(filters.BaseFilterBackend):

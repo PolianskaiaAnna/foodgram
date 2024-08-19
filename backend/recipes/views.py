@@ -3,13 +3,6 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views import View
 from django_filters.rest_framework import DjangoFilterBackend
-from recipes.filters import IngredientFilter, RecipeFilter, RecipeFilterBackend
-from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
-                            ShoppingCart, Tag)
-from recipes.permissions import IsAuthorOrAdmin
-from recipes.serializers import (FavoriteSerializer, IngredientSerializer,
-                                 RecipeCreateSerizalizer, RecipeReadSerializer,
-                                 ShoppingCartSerializer, TagSerializer)
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import (IsAuthenticated,
@@ -17,6 +10,14 @@ from rest_framework.permissions import (IsAuthenticated,
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ViewSet
+
+from recipes.filters import IngredientFilter, RecipeFilter, RecipeFilterBackend
+from recipes.models import (Favorite, Ingredient, IngredientRecipe, Recipe,
+                            ShoppingCart, Tag)
+from recipes.permissions import IsAuthorOrAdmin
+from recipes.serializers import (FavoriteSerializer, IngredientSerializer,
+                                 RecipeCreateSerizalizer, RecipeReadSerializer,
+                                 ShoppingCartSerializer, TagSerializer)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
